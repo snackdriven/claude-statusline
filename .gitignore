@@ -1,0 +1,8 @@
+# Per-user runtime state — never commit
+buddy/.cooldowns.json
+buddy/session-state.json
+buddy/events.log
+
+# Producer outputs are runtime
+buddy/regions/*.json
+!buddy/regions/.gitkeep
