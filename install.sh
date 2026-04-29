@@ -29,6 +29,16 @@ chmod +x "$CLAUDE_DIR/buddy/render.sh" \
 
 echo "  ✓ scripts → ~/.claude/buddy/"
 
+# Optional bridges to operator-core-mini and qa-brain.
+# These are no-ops at runtime unless OPERATOR_ROOT or QA_BRAIN_URL resolves
+# to something real, so they're safe to install by default.
+if [[ -f "$REPO_DIR/buddy/producers/op_core.sh" ]]; then
+  echo "  ✓ op_core.sh installed (set OPERATOR_ROOT + OP_CORE_REPO to enable)"
+fi
+if [[ -f "$REPO_DIR/buddy/producers/qa_state.sh" ]]; then
+  echo "  ✓ qa_state.sh installed (auto-detects qa-brain at localhost:3737)"
+fi
+
 # Wire statusLine + SessionStart hook in settings.json
 if ! command -v python3 &>/dev/null; then
   echo ""

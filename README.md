@@ -66,6 +66,8 @@ Claude Code → buddy-status.sh (shim) → buddy/render.sh
 | `project.sh` | project | 1 | 60 | 30s | `client-intake on main+5` (basename + branch + dirty count) |
 | `meeting.sh` | next meeting | 1 | 50 | 60s | From `~/.claude/next-meeting.txt` |
 | `conscience.sh` | rule hint | 2 | 40 | 60s | Match recent activity against feedback rules, surface one hint |
+| `op_core.sh` | op-co-mi bridge | 0–2 | 30–70 | 60s | 4 regions sourced from [operator-core-mini](https://github.com/snackdriven/operator-core-mini) (carry-state, today's meeting, freshness nudge, consent-gate banner) |
+| `qa_state.sh` | qa-brain bridge | 0–1 | 55–75 | 45s | Today's TTOAD ticket counts (`in-review`, `in-progress`) and optional next in-scope release date, sourced from [qa-brain](https://github.com/snackdriven/qa-brain) at `localhost:3737` |
 
 Each producer runs as `bash producer.sh` with the Claude Code statusline JSON piped to stdin (`workspace.current_dir`, `transcript_path`, etc). Producers self-cache by checking their region file's `updated_at` against TTL, so the renderer parallelism is cheap.
 
@@ -90,6 +92,49 @@ To add a rule, edit `build-conscience-index.sh` and run it. Cooldown is per-rule
 
 - `buddy/session-state.json` — short-lived per-session counters (closer_phrases, pass_fail_log, recent_searches). Gitignored.
 - `buddy/session-reset.sh` — wired by the installer to the SessionStart hook. Resets the file so each new session starts clean.
+
+## op-co-mi + qa-brain bridges
+
+Two optional producers that surface facts from the broader QA stack. Both fail open (write empty regions) when their data source isn't reachable, so they're safe to keep installed.
+
+### `op_core.sh` — operator-core-mini
+
+Calls [operator-core-mini](https://github.com/snackdriven/operator-core-mini)'s `renderers/statusline.py --json` once per cycle and fans the result into 4 regions:
+
+| Region | Row | Priority | Color | What it shows |
+|---|---|---|---|---|
+| `op_carry`   | 0 | 70 | default | Top current Backpack item summary (loses to `ticket.sh` on row 0 when width is tight) |
+| `op_meeting` | 1 | 50 | yellow  | Today's `q2`/`sync`/`meeting`-tagged Backpack item |
+| `op_verify`  | 1 | 65 | yellow  | `<N> stale` — items needing verification per the freshness policy |
+| `op_consent` | 2 | 30 | dim     | Short consent-gate banner (e.g. `1 held: health`) — never names suppressed items |
+
+All filtering (consent gate, `surfaces` allowlist, `never_surface_in` denylist, freshness budget) lives in op-co-mi per ADR 0003 + 0004; this producer is a dumb projector.
+
+**Setup:**
+
+```bash
+export OPERATOR_ROOT="$HOME/.operator-core"          # default
+export OP_CORE_REPO="$HOME/code/operator-core-mini"  # default
+```
+
+If `$OPERATOR_ROOT/doctrine` is missing, `op_core.sh` falls back to qa-brain's legacy flat backpack at `$QA_BRAIN_URL/api/backpack` (default `http://localhost:3737`) and surfaces the most-recent date-suffixed entry as `op_carry`. Other regions stay empty in fallback mode — there is no consent gate or verify policy in the legacy flat backpack.
+
+### `qa_state.sh` — qa-brain
+
+Reads from [qa-brain](https://github.com/snackdriven/qa-brain) (`/api/tickets/state`, `/api/today`, `/api/manifest`) and emits:
+
+| Region | Row | Priority | What it shows |
+|---|---|---|---|
+| `qa_states`  | 0 | 75 | `<n> in-review · <n> in-progress` — counts scoped to today's TTOAD set from the manifest. Other states stay silent. Color is `default` if any are in-progress, `dim` otherwise. |
+| `qa_release` | 1 | 55 | `CHG-689 in 2d` — soonest in-scope release. Empty unless the toggle is on. |
+
+**Toggles:**
+
+```bash
+export QA_BRAIN_URL="http://localhost:3737"  # default
+export QA_SHOW_RELEASE_OPS=1                 # default 0 — show qa_release
+export QA_STATE_CACHE_SECONDS=15             # default 15
+```
 
 ## Customizing
 
