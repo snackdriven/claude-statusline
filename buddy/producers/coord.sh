@@ -4,6 +4,9 @@
 
 set -u
 
+# shellcheck source=../lib/platform.sh
+source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
+
 REGION_FILE="$HOME/.claude/buddy/regions/coord.json"
 CACHE_WINDOW=10
 PRIORITY=75
@@ -17,7 +20,7 @@ HEARTBEAT_MAX_AGE=180
 
 # Self-cache: skip if region file mtime is fresher than CACHE_WINDOW
 if [[ -f "$REGION_FILE" ]]; then
-  prev=$(stat -f%m "$REGION_FILE" 2>/dev/null || echo 0)
+  prev=$(stat_mtime "$REGION_FILE")
   age=$(( $(date +%s) - prev ))
   (( age < CACHE_WINDOW )) && exit 0
 fi
@@ -43,8 +46,7 @@ if [[ ! -f "$HEARTBEAT" ]]; then
   exit 0
 fi
 
-# macOS stat -f%m for mtime
-last=$(stat -f%m "$HEARTBEAT" 2>/dev/null || echo 0)
+last=$(stat_mtime "$HEARTBEAT")
 now_ts=$(date +%s)
 hb_age=$(( now_ts - last ))
 

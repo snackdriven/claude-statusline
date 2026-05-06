@@ -4,6 +4,9 @@
 
 set -u
 
+# shellcheck source=../lib/platform.sh
+source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
+
 REGION_FILE="$HOME/.claude/buddy/regions/ticket.json"
 CACHE_WINDOW=30
 PRIORITY=80
@@ -46,8 +49,7 @@ fi
 
 today=$(date +%Y-%m-%d)
 
-# Helper: macOS mtime
-mtime() { stat -f %m "$1" 2>/dev/null || echo 0; }
+mtime() { stat_mtime "$1"; }
 
 # Walk today + last 6 days, newest first. First daily with detectable
 # activity wins. Stale data is fine — caller sees idle timer + minutes.

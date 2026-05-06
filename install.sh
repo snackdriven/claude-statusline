@@ -10,7 +10,7 @@ SETTINGS="$CLAUDE_DIR/settings.json"
 
 echo "→ Installing claude-statusline..."
 
-mkdir -p "$CLAUDE_DIR/buddy/producers" "$CLAUDE_DIR/buddy/regions"
+mkdir -p "$CLAUDE_DIR/buddy/producers" "$CLAUDE_DIR/buddy/regions" "$CLAUDE_DIR/buddy/lib"
 
 # Shim
 cp "$REPO_DIR/buddy-status.sh" "$CLAUDE_DIR/buddy-status.sh"
@@ -22,10 +22,12 @@ cp "$REPO_DIR/buddy/session-reset.sh" "$CLAUDE_DIR/buddy/session-reset.sh"
 cp "$REPO_DIR/buddy/build-conscience-index.sh" "$CLAUDE_DIR/buddy/build-conscience-index.sh"
 cp "$REPO_DIR/buddy/conscience-index.json" "$CLAUDE_DIR/buddy/conscience-index.json"
 cp "$REPO_DIR/buddy/producers/"*.sh "$CLAUDE_DIR/buddy/producers/"
+cp "$REPO_DIR/buddy/lib/"*.sh "$CLAUDE_DIR/buddy/lib/"
 chmod +x "$CLAUDE_DIR/buddy/render.sh" \
          "$CLAUDE_DIR/buddy/session-reset.sh" \
          "$CLAUDE_DIR/buddy/build-conscience-index.sh" \
-         "$CLAUDE_DIR/buddy/producers/"*.sh
+         "$CLAUDE_DIR/buddy/producers/"*.sh \
+         "$CLAUDE_DIR/buddy/lib/"*.sh
 
 echo "  ✓ scripts → ~/.claude/buddy/"
 

@@ -15,6 +15,9 @@
 
 set -u
 
+# shellcheck source=../lib/platform.sh
+source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
+
 REGION_FILE="$HOME/.claude/buddy/regions/context.json"
 CACHE_WINDOW=5
 PRIORITY=80   # row 0, after buddy (priority 90)
@@ -23,7 +26,7 @@ ID="context"
 
 # Self-cache
 if [[ -f "$REGION_FILE" ]]; then
-  prev=$(stat -f%m "$REGION_FILE" 2>/dev/null || echo 0)
+  prev=$(stat_mtime "$REGION_FILE")
   age=$(( $(date +%s) - prev ))
   (( age < CACHE_WINDOW )) && exit 0
 fi
@@ -86,7 +89,7 @@ fi
 
 # Tail and find last assistant message with usage. Sum the four token fields.
 # Walking tail backwards keeps this O(small) even on big sessions.
-usage_line=$(tail -r "$transcript" 2>/dev/null | head -200 | \
+usage_line=$(tail_reverse "$transcript" | head -200 | \
   jq -rc 'select(.type=="assistant") | .message.usage // empty | select(. != null)' 2>/dev/null | head -1)
 
 if [[ -z "$usage_line" ]]; then
