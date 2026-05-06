@@ -13,7 +13,7 @@
 #   qa_states   row 0, prio 75  — "<n> in-review · <n> in-progress"
 #                                 (only the two states actually kicked
 #                                 back to; others stay silent)
-#   qa_release  row 1, prio 55  — "CHG-689 in 3d" — soonest in-scope
+#   qa_release  row 2, prio 55  — "CHG-689 in 3d" — soonest in-scope
 #                                 release. Emitted only when the env
 #                                 toggle QA_SHOW_RELEASE_OPS is set
 #                                 truthy (1, true, yes, on); otherwise
@@ -74,7 +74,7 @@ write_region() {
 
 write_empty_all() {
   write_region qa_states  0 75 default ""
-  write_region qa_release 1 55 cyan    ""
+  write_region qa_release 2 55 cyan    ""
 }
 
 # Bail early if curl/jq missing — fail open, not loud.
@@ -194,15 +194,15 @@ if truthy "$SHOW_RELEASE_OPS" && [[ -n "$manifest_json" ]] \
         text="${key} in ${days}d"
         color="cyan"
       fi
-      write_region qa_release 1 55 "$color" "$text"
+      write_region qa_release 2 55 "$color" "$text"
     else
-      write_region qa_release 1 55 cyan ""
+      write_region qa_release 2 55 cyan ""
     fi
   else
-    write_region qa_release 1 55 cyan ""
+    write_region qa_release 2 55 cyan ""
   fi
 else
-  write_region qa_release 1 55 cyan ""
+  write_region qa_release 2 55 cyan ""
 fi
 
 exit 0

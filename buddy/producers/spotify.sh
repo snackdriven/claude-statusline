@@ -10,7 +10,7 @@ CACHE_WINDOW=10   # short so track changes appear within ~10s
 PRIORITY=45
 TTL_SEC=20
 ID="spotify"
-ROW=1
+ROW=2
 
 # Self-cache
 if [[ -f "$REGION_FILE" ]]; then

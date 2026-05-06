@@ -65,11 +65,13 @@ Claude Code → buddy-status.sh (shim) → buddy/render.sh
 | `coord.sh` | coordinator | 1 | 75 | 30s | Multi-session coordinator heartbeat + worker dots |
 | `project.sh` | project | 1 | 60 | 30s | `client-intake on main+5` (basename + branch + dirty count) |
 | `gh.sh` | active gh account | 1 | 55 | 60s | `gh:<account>` — color-coded so personal/work mix-ups are loud. Edit the case statement to change the color map. |
-| `spotify.sh` | now playing | 3 | 45 | 20s | `♪ Artist – Track` from Spotify desktop app (macOS osascript / Linux playerctl). Own row so it never gets evicted when row 1 is tight. |
-| `meeting.sh` | next meeting | 1 | 50 | 60s | From `~/.claude/next-meeting.txt` |
-| `conscience.sh` | rule hint | 2 | 40 | 60s | Match recent activity against feedback rules, surface one hint |
-| `op_core.sh` | op-co-mi bridge | 0–2 | 30–70 | 60s | 4 regions sourced from [operator-core-mini](https://github.com/snackdriven/operator-core-mini) (carry-state, today's meeting, freshness nudge, consent-gate banner) |
-| `qa_state.sh` | qa-brain bridge | 0–1 | 55–75 | 45s | Today's TTOAD ticket counts (`in-review`, `in-progress`) and optional next in-scope release date, sourced from [qa-brain](https://github.com/snackdriven/qa-brain) at `localhost:3737` |
+| `meeting.sh` | next meeting | 2 | 50 | 60s | From `~/.claude/next-meeting.txt` |
+| `spotify.sh` | now playing | 2 | 45 | 20s | `♪ Artist – Track` from Spotify desktop app (macOS osascript / Linux playerctl). |
+| `conscience.sh` | rule hint | 3 | 40 | 60s | Match recent activity against feedback rules, surface one hint |
+| `op_core.sh` | op-co-mi bridge | 0–2 | 30–70 | 60s | 4 regions sourced from [operator-core-mini](https://github.com/snackdriven/operator-core-mini) (carry-state on row 0, today's meeting + freshness nudge on row 2, consent-gate banner on row 2) |
+| `qa_state.sh` | qa-brain bridge | 0,2 | 55–75 | 45s | Today's TTOAD ticket counts (`in-review`, `in-progress`) on row 0 and optional next in-scope release date on row 2, sourced from [qa-brain](https://github.com/snackdriven/qa-brain) at `localhost:3737` |
+
+**Row layout:** row 0 = critical at-a-glance (buddy, context, ticket, op_carry, qa_states), row 1 = active session context (coord, project, gh), row 2 = ambient (meeting, op_meeting, op_verify, qa_release, op_consent, spotify), row 3 = rule hints (conscience).
 
 Each producer runs as `bash producer.sh` with the Claude Code statusline JSON piped to stdin (`workspace.current_dir`, `transcript_path`, etc). Producers self-cache by checking their region file's `updated_at` against TTL, so the renderer parallelism is cheap.
 

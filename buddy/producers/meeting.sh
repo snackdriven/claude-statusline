@@ -34,7 +34,7 @@ write_region() {
     --argjson p "$PRIORITY" \
     --argjson ttl "$TTL_SEC" \
     --argjson now "$now" \
-    '{id: $id, text: $t, color: $c, priority: $p, row: 1, ttl_sec: $ttl, updated_at: $now}' \
+    '{id: $id, text: $t, color: $c, priority: $p, row: 2, ttl_sec: $ttl, updated_at: $now}' \
     > "$REGION_FILE"
 }
 

@@ -12,10 +12,10 @@
 #                                 (loses to ticket.sh's prio 80 in the same
 #                                 row when the row is width-tight, which is
 #                                 what we want: live workflow > queue summary)
-#   op_meeting  row 1, prio 50  — today's q2/sync/meeting summary
+#   op_meeting  row 2, prio 50  — today's q2/sync/meeting summary
 #                                 (parallel to meeting.sh; if both fire,
 #                                 higher priority wins per row sort)
-#   op_verify   row 1, prio 65  — "<N> stale" freshness nudge
+#   op_verify   row 2, prio 65  — "<N> stale" freshness nudge
 #   op_consent  row 2, prio 30  — short consent-gate banner (never names
 #                                 suppressed items per ADR 0004)
 #
@@ -87,8 +87,8 @@ write_region() {
 
 write_empty_all() {
   write_region op_carry   0 70 magenta ""
-  write_region op_meeting 1 50 yellow  ""
-  write_region op_verify  1 65 dim     ""
+  write_region op_meeting 2 50 yellow  ""
+  write_region op_verify   2 65 dim     ""
   write_region op_consent 2 30 dim     ""
 }
 
@@ -107,12 +107,12 @@ if [[ -d "$OPERATOR_ROOT/doctrine" ]] \
     gate=$(  jq -r '.gate_short   // ""' <<<"$payload")
 
     write_region op_carry   0 70 magenta "$carry"
-    write_region op_meeting 1 50 yellow  "$meet"
+    write_region op_meeting 2 50 yellow  "$meet"
 
     if (( vcount > 0 )); then
-      write_region op_verify 1 65 yellow "⏰ ${vcount} stale"
+      write_region op_verify  2 65 yellow "⏰ ${vcount} stale"
     else
-      write_region op_verify 1 65 dim ""
+      write_region op_verify  2 65 dim ""
     fi
 
     write_region op_consent 2 30 dim "$gate"
@@ -154,8 +154,8 @@ if command -v curl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
     fi
 
     write_region op_carry   0 70 default "$fallback"
-    write_region op_meeting 1 50 yellow  ""
-    write_region op_verify  1 65 dim     ""
+    write_region op_meeting 2 50 yellow  ""
+    write_region op_verify   2 65 dim     ""
     write_region op_consent 2 30 dim     ""
     exit 0
   fi
