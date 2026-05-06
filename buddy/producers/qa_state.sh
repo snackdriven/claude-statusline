@@ -148,8 +148,8 @@ _QA_DIM=$'\033[90m'
 _QA_CYN=$'\033[36m'
 _QA_CLR=$'\033[0m'
 parts=()
-(( in_review   > 0 )) && parts+=("${_QA_DIM}${in_review} in-review${_QA_CLR}")
-(( in_progress > 0 )) && parts+=("${_QA_CYN}${in_progress} in-progress${_QA_CLR}")
+(( in_review   > 0 )) && parts+=("${_QA_DIM}🎫 ${in_review} in-review${_QA_CLR}")
+(( in_progress > 0 )) && parts+=("${_QA_CYN}🎫 ${in_progress} in-progress${_QA_CLR}")
 
 if (( ${#parts[@]} == 0 )); then
   write_region qa_states 0 75 default ""

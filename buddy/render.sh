@@ -17,11 +17,20 @@ set -u  # no -e: producer failures shouldn't kill the renderer
 BUDDY_DIR="$HOME/.claude/buddy"
 REGIONS_DIR="$BUDDY_DIR/regions"
 PRODUCERS_DIR="$BUDDY_DIR/producers"
-WIDTH_BUDGET=120
 SEPARATOR=" · "
 
 # Read stdin so producers can also consume it
 STDIN_JSON=$(cat 2>/dev/null || echo '{}')
+
+# Width budget: derive from terminal width passed by Claude Code, minus a small
+# margin so regions don't bump the prompt edge. Fall back to 120 if missing.
+# tput as a secondary fallback when stdin doesn't carry terminal info.
+WIDTH_BUDGET=$(echo "$STDIN_JSON" | jq -r '.terminal.width // empty' 2>/dev/null)
+if [[ -z "$WIDTH_BUDGET" || "$WIDTH_BUDGET" == "null" ]]; then
+  WIDTH_BUDGET=$(tput cols 2>/dev/null || echo 120)
+fi
+WIDTH_BUDGET=$(( WIDTH_BUDGET - 4 ))
+(( WIDTH_BUDGET < 40 )) && WIDTH_BUDGET=40
 
 # Fork all producers in parallel; each producer self-caches
 # IMPORTANT: bare `&` (not `(... &)`) so parent shell can `wait` on the jobs
@@ -83,7 +92,9 @@ while IFS=$'\t' read -r row text color; do
     flush_row
     current_row="$row"
   fi
-  add_len=${#text}
+  # Visible width: strip ANSI escapes and count code points (not bytes).
+  visible=$(printf '%s' "$text" | sed $'s/\033\\[[0-9;]*m//g')
+  add_len=$(printf '%s' "$visible" | wc -m | tr -d ' ')
   (( first_in_row == 0 )) && add_len=$(( add_len + ${#SEPARATOR} ))
   if (( row_len + add_len > WIDTH_BUDGET )); then
     continue

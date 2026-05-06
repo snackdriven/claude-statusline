@@ -50,7 +50,7 @@ if [[ -n "$branch" ]]; then
     else
       _PROJ_DIRTY=$'\033[33m'
     fi
-    text="${basename}${_PROJ_DIM} on ${_PROJ_CLR}${branch}${_PROJ_DIRTY}+${dirty_count}${_PROJ_CLR}"
+    text="${basename}${_PROJ_DIM} on ${_PROJ_CLR}${branch} ${_PROJ_DIRTY}+${dirty_count}${_PROJ_CLR}"
   else
     text="${basename} on ${branch}"
   fi

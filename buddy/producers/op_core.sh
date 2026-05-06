@@ -110,7 +110,7 @@ if [[ -d "$OPERATOR_ROOT/doctrine" ]] \
     write_region op_meeting 1 50 yellow  "$meet"
 
     if (( vcount > 0 )); then
-      write_region op_verify 1 65 yellow "${vcount} stale"
+      write_region op_verify 1 65 yellow "⏰ ${vcount} stale"
     else
       write_region op_verify 1 65 dim ""
     fi

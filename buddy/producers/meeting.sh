@@ -9,7 +9,7 @@ source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
 
 REGION_FILE="$HOME/.claude/buddy/regions/meeting.json"
 CACHE_WINDOW=30
-PRIORITY=50
+PRIORITY=70
 TTL_SEC=60
 COLOR="magenta"
 ID="meeting"
@@ -52,4 +52,12 @@ if [[ -z "$content" ]]; then
   exit 0
 fi
 
-write_region "meet ${content}"
+# Split "Name @ Date Time" so the magenta region color applies to the meeting
+# name only; the " @ Day Time" portion drops back to terminal default (white-ish).
+if [[ "$content" == *" @ "* ]]; then
+  _name="${content% @ *}"
+  _dt="${content##* @ }"
+  write_region "📅 ${_name}"$'\033[38;5;252m'" @ ${_dt}"$'\033[0m'
+else
+  write_region "📅 ${content}"
+fi
