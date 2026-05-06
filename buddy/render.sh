@@ -22,10 +22,16 @@ SEPARATOR=" · "
 # Read stdin so producers can also consume it
 STDIN_JSON=$(cat 2>/dev/null || echo '{}')
 
-# Width budget: derive from terminal width passed by Claude Code, minus a small
-# margin so regions don't bump the prompt edge. Fall back to 120 if missing.
-# tput as a secondary fallback when stdin doesn't carry terminal info.
-WIDTH_BUDGET=$(echo "$STDIN_JSON" | jq -r '.terminal.width // empty' 2>/dev/null | tr -d '[:space:]')
+# Width budget. Resolution order:
+#   1. $CLAUDE_STATUSLINE_WIDTH env override (set in shell rc when Claude
+#      under-reports width and you actually run a wide terminal)
+#   2. .terminal.width from Claude Code's stdin JSON
+#   3. tput cols
+#   4. 120 fallback
+WIDTH_BUDGET="${CLAUDE_STATUSLINE_WIDTH:-}"
+if [[ -z "$WIDTH_BUDGET" ]]; then
+  WIDTH_BUDGET=$(echo "$STDIN_JSON" | jq -r '.terminal.width // empty' 2>/dev/null | tr -d '[:space:]')
+fi
 if [[ -z "$WIDTH_BUDGET" || "$WIDTH_BUDGET" == "null" ]]; then
   WIDTH_BUDGET=$(tput cols 2>/dev/null | tr -d '[:space:]' || echo 120)
 fi

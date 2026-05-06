@@ -51,7 +51,8 @@ Claude Code → buddy-status.sh (shim) → buddy/render.sh
 **Render rules** (`buddy/render.sh`):
 - Sort by `row` asc, then `priority` desc within row
 - Drop entries where `now - updated_at > ttl_sec`
-- 120-char width budget per row, separator ` · `, ANSI colors (dim / cyan / magenta / yellow / red / green)
+- Width budget per row defaults from `.terminal.width` (Claude Code stdin JSON), falls back to `tput cols`, then 120. Separator ` · `, ANSI colors (dim / cyan / magenta / yellow / red / green)
+- **Override:** set `CLAUDE_STATUSLINE_WIDTH=<n>` in your shell rc to force a width. Useful when Claude Code under-reports terminal size (or you want a fixed budget regardless of which app is hosting).
 - Width overflow drops the next region silently, no truncation
 - Empty rows skipped
 
