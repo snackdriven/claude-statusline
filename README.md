@@ -64,6 +64,7 @@ Claude Code → buddy-status.sh (shim) → buddy/render.sh
 | `ticket.sh` | active ticket | 0 | 80 | 60s | Detected TTOAD ticket from filesystem activity, with idle timer |
 | `coord.sh` | coordinator | 1 | 75 | 30s | Multi-session coordinator heartbeat + worker dots |
 | `project.sh` | project | 1 | 60 | 30s | `client-intake on main+5` (basename + branch + dirty count) |
+| `gh.sh` | active gh account | 1 | 55 | 60s | `gh:<account>` — color-coded so personal/work mix-ups are loud. Edit the case statement to change the color map. |
 | `meeting.sh` | next meeting | 1 | 50 | 60s | From `~/.claude/next-meeting.txt` |
 | `conscience.sh` | rule hint | 2 | 40 | 60s | Match recent activity against feedback rules, surface one hint |
 | `op_core.sh` | op-co-mi bridge | 0–2 | 30–70 | 60s | 4 regions sourced from [operator-core-mini](https://github.com/snackdriven/operator-core-mini) (carry-state, today's meeting, freshness nudge, consent-gate banner) |
