@@ -61,7 +61,10 @@ if [[ -f "$REGISTRY" ]]; then
   active=$(jq '[.workers[]? | select(.status == "active")] | length' "$REGISTRY" 2>/dev/null || echo 0)
 fi
 
-# Compose dots
+# Compose dots — active workers green, idle workers dim
+_COORD_GRN=$'\033[32m'
+_COORD_DIM=$'\033[90m'
+_COORD_CLR=$'\033[0m'
 if (( total == 0 )); then
   text="🎯"
 elif (( total > 5 )); then
@@ -69,8 +72,8 @@ elif (( total > 5 )); then
 else
   dots=""
   i=0
-  while (( i < active )); do dots+="●"; i=$((i+1)); done
-  while (( i < total )); do dots+="○"; i=$((i+1)); done
+  while (( i < active )); do dots+="${_COORD_GRN}●${_COORD_CLR}"; i=$((i+1)); done
+  while (( i < total )); do dots+="${_COORD_DIM}○${_COORD_CLR}"; i=$((i+1)); done
   text="🎯 ${dots}"
 fi
 

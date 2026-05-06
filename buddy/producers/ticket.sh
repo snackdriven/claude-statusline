@@ -258,13 +258,19 @@ if [[ -n "$ts_file" && -f "$ts_file" ]]; then
 fi
 
 # --- Compose ---
+_TKT_CLR=$'\033[0m'
+_TKT_DIM=$'\033[90m'
 if [[ "$step" == "idle" ]]; then
   if [[ -z "$ticket" ]]; then
     write_region "" ""
   else
     idle_min=$(( (now_ts - ticket_mtime) / 60 ))
-    write_region "${ticket} … idle ${idle_min}m" "dim"
+    write_region "${_TKT_CLR}${ticket}${_TKT_DIM} … idle ${idle_min}m${_TKT_CLR}" "dim"
   fi
 else
-  write_region "${ticket} ${icon}${progress}" "magenta"
+  if [[ -n "$progress" ]]; then
+    write_region "${ticket} ${icon}${_TKT_CLR}${progress}" "magenta"
+  else
+    write_region "${ticket} ${icon}" "magenta"
+  fi
 fi

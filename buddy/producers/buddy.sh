@@ -134,13 +134,16 @@ else
   face=$(face_for_species "$species" "$hour")
 fi
 
-# Hearts (3 tiers)
+# Hearts (3 tiers) — inline ANSI so they're red/dim regardless of region color
+_RED=$'\033[31m'
+_DIM=$'\033[90m'
+_CLR=$'\033[0m'
 if (( affection >= 70 )); then
-  hearts="❤❤❤"
+  hearts="${_RED}❤❤❤${_CLR}"
 elif (( affection >= 40 )); then
-  hearts="❤❤♡"
+  hearts="${_RED}❤❤${_DIM}♡${_CLR}"
 else
-  hearts="❤♡♡"
+  hearts="${_RED}❤${_DIM}♡♡${_CLR}"
 fi
 
 # Hunger icon
@@ -150,13 +153,18 @@ else
   hunger_icon=""
 fi
 
-# Rarity prefix
+# Rarity prefix — color by tier
+_RARITY_DIM=$'\033[90m'
+_RARITY_YEL=$'\033[33m'
+_RARITY_MAG=$'\033[35m'
+_RARITY_LEG=$'\033[1;33m'
+_RARITY_CLR=$'\033[0m'
 rarity_prefix=""
 case "$rarity" in
-  Uncommon)  rarity_prefix="✦ " ;;
-  Rare)      rarity_prefix="★ " ;;
-  Epic)      rarity_prefix="✦★ " ;;
-  Legendary) rarity_prefix="✦★✦ " ;;
+  Uncommon)  rarity_prefix="${_RARITY_DIM}✦ ${_RARITY_CLR}" ;;
+  Rare)      rarity_prefix="${_RARITY_YEL}★ ${_RARITY_CLR}" ;;
+  Epic)      rarity_prefix="${_RARITY_MAG}✦★ ${_RARITY_CLR}" ;;
+  Legendary) rarity_prefix="${_RARITY_LEG}✦★✦ ${_RARITY_CLR}" ;;
 esac
 
 # Shiny tag

@@ -144,25 +144,21 @@ if [[ -n "$state_json" ]] && jq -e . <<<"$state_json" >/dev/null 2>&1; then
 fi
 
 # ── Compose qa_states ──
+_QA_DIM=$'\033[90m'
+_QA_CYN=$'\033[36m'
+_QA_CLR=$'\033[0m'
 parts=()
-(( in_review   > 0 )) && parts+=("${in_review} in-review")
-(( in_progress > 0 )) && parts+=("${in_progress} in-progress")
+(( in_review   > 0 )) && parts+=("${_QA_DIM}${in_review} in-review${_QA_CLR}")
+(( in_progress > 0 )) && parts+=("${_QA_CYN}${in_progress} in-progress${_QA_CLR}")
 
 if (( ${#parts[@]} == 0 )); then
   write_region qa_states 0 75 default ""
 else
-  # Color: dim if everything is just in-review (calm), green otherwise.
-  if (( in_progress > 0 )); then
-    color="green"
-  else
-    color="dim"
-  fi
-  # Join with ' · ' (IFS join only uses first byte; build manually).
   text="${parts[0]}"
   for ((i=1; i<${#parts[@]}; i++)); do
     text+=" · ${parts[i]}"
   done
-  write_region qa_states 0 75 "$color" "$text"
+  write_region qa_states 0 75 default "$text"
 fi
 
 # ── qa_release (toggleable) ──
