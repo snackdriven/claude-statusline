@@ -40,7 +40,7 @@ REGIONS="$BUDDY_DIR/regions"
 NOW=$(date +%s)
 
 OPERATOR_ROOT="${OPERATOR_ROOT:-$HOME/.operator-core}"
-OP_CORE_REPO="${OP_CORE_REPO:-$HOME/code/operator-core-mini}"
+OP_CORE_REPO="${OP_CORE_REPO:-$HOME/Desktop/projects/operator-core-mini}"
 QA_BRAIN_URL="${QA_BRAIN_URL:-http://localhost:3737}"
 CACHE_WINDOW="${OP_CORE_CACHE_SECONDS:-30}"
 
@@ -86,7 +86,7 @@ write_region() {
 }
 
 write_empty_all() {
-  write_region op_carry   0 70 default ""
+  write_region op_carry   0 70 magenta ""
   write_region op_meeting 1 50 yellow  ""
   write_region op_verify  1 65 dim     ""
   write_region op_consent 2 30 dim     ""
@@ -106,7 +106,7 @@ if [[ -d "$OPERATOR_ROOT/doctrine" ]] \
     vcount=$(jq -r '.verify_count // 0'  <<<"$payload")
     gate=$(  jq -r '.gate_short   // ""' <<<"$payload")
 
-    write_region op_carry   0 70 default "$carry"
+    write_region op_carry   0 70 magenta "$carry"
     write_region op_meeting 1 50 yellow  "$meet"
 
     if (( vcount > 0 )); then

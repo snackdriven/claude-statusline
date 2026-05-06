@@ -8,7 +8,7 @@ REGION_FILE="$HOME/.claude/buddy/regions/meeting.json"
 CACHE_WINDOW=30
 PRIORITY=50
 TTL_SEC=60
-COLOR="yellow"
+COLOR="magenta"
 ID="meeting"
 
 NEXT_FILE="$HOME/.claude/next-meeting.txt"

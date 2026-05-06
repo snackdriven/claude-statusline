@@ -45,15 +45,32 @@ if [[ -z "$WORKSPACE_ROOT" || ! -d "$WORKSPACE_ROOT" ]]; then
 fi
 
 today=$(date +%Y-%m-%d)
-DAILY_DIR="$WORKSPACE_ROOT/dailies/$today"
-
-if [[ ! -d "$DAILY_DIR" ]]; then
-  write_region "" ""
-  exit 0
-fi
 
 # Helper: macOS mtime
 mtime() { stat -f %m "$1" 2>/dev/null || echo 0; }
+
+# Walk today + last 6 days, newest first. First daily with detectable
+# activity wins. Stale data is fine — caller sees idle timer + minutes.
+DAILY_DIR=""
+for back in 0 1 2 3 4 5 6; do
+  d=$(date -v-${back}d +%Y-%m-%d 2>/dev/null || date -d "-${back} days" +%Y-%m-%d)
+  candidate="$WORKSPACE_ROOT/dailies/$d"
+  if [[ -d "$candidate" ]]; then
+    # Has any of the signals we look for?
+    if [[ -d "$candidate/jira-comments" ]] \
+       || compgen -G "$candidate/ttoad-*-repro" >/dev/null 2>&1 \
+       || compgen -G "$candidate/tickets/*ttoad-*.md" >/dev/null 2>&1 \
+       || compgen -G "$candidate/testing-steps-*.html" >/dev/null 2>&1; then
+      DAILY_DIR="$candidate"
+      break
+    fi
+  fi
+done
+
+if [[ -z "$DAILY_DIR" ]]; then
+  write_region "" ""
+  exit 0
+fi
 
 # --- Active ticket extraction (ranked) ---
 ticket=""

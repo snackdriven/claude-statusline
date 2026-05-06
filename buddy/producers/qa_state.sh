@@ -151,9 +151,9 @@ parts=()
 if (( ${#parts[@]} == 0 )); then
   write_region qa_states 0 75 default ""
 else
-  # Color: dim if everything is just in-review (calm), default otherwise.
+  # Color: dim if everything is just in-review (calm), green otherwise.
   if (( in_progress > 0 )); then
-    color="default"
+    color="green"
   else
     color="dim"
   fi

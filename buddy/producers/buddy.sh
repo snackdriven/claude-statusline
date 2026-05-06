@@ -179,7 +179,7 @@ elif (( affection < 30 )); then
 elif (( hunger < 30 )); then
   color="yellow"
 else
-  color="default"
+  color="cyan"
 fi
 
 jq -n --arg t "$text" --arg c "$color" --argjson now "$now" '{

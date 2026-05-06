@@ -107,4 +107,4 @@ while IFS=$'\t' read -r row text color; do
 done <<< "$tsv"
 flush_row
 
-printf "%s" "$output"
+printf "%s\n" "$output"
