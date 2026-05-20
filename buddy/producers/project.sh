@@ -46,9 +46,9 @@ if [[ -n "$branch" ]]; then
     _PROJ_DIM=$'\033[90m'
     _PROJ_CLR=$'\033[0m'
     if (( dirty_count > 15 )); then
-      _PROJ_DIRTY=$'\033[31m'
+      _PROJ_DIRTY=$'\033[38;5;211m'
     else
-      _PROJ_DIRTY=$'\033[33m'
+      _PROJ_DIRTY=$'\033[38;5;223m'
     fi
     text="${basename}${_PROJ_DIM} on ${_PROJ_CLR}${branch} ${_PROJ_DIRTY}+${dirty_count}${_PROJ_CLR}"
   else

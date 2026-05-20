@@ -10,7 +10,7 @@ CACHE_WINDOW=10   # short so track changes appear within ~10s
 PRIORITY=45
 TTL_SEC=20
 ID="spotify"
-ROW=2
+ROW=3
 
 # Self-cache
 if [[ -f "$REGION_FILE" ]]; then
@@ -61,4 +61,8 @@ fi
 # Trim long titles
 (( ${#track} > 50 )) && track="${track:0:49}…"
 
-write_region "♪ ${track}" "green"
+# Per-part coloring: ♪ bright neutral (252), track in Catppuccin mauve (141)
+BRIGHT=$'\033[38;5;252m'
+PURPLE=$'\033[38;5;141m'
+RST=$'\033[0m'
+write_region "${BRIGHT}♪${RST} ${PURPLE}${track}${RST}" "default"

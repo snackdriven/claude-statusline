@@ -49,10 +49,11 @@ if [[ -z "$account" ]]; then
   color="yellow"
 else
   text="gh:${account}"
+  # Inline ANSI for Catppuccin 256-color palette (no native label for sky/peach)
   case "$account" in
-    kayla-at-chorus) color="green"   ;;
-    snackdriven)     color="magenta" ;;
-    *)               color="yellow"  ;;
+    kayla-at-chorus) text=$'\033[38;5;117m'"gh:${account}"$'\033[0m'; color="default" ;;
+    snackdriven)     text=$'\033[38;5;217m'"gh:${account}"$'\033[0m'; color="default" ;;
+    *)               color="yellow" ;;
   esac
 fi
 

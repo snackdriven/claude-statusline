@@ -24,7 +24,7 @@ if [[ ! -f "$BUDDY_FILE" ]]; then
   now=$(date +%s)
   jq -n --argjson now "$now" '{
     id: "buddy", text: "🥚 /buddy", color: "dim",
-    priority: 90, row: 0, ttl_sec: 30, updated_at: $now
+    priority: 90, row: 3, ttl_sec: 30, updated_at: $now
   }' > "$REGION_FILE"
   exit 0
 fi
@@ -34,7 +34,7 @@ if [[ -z "$buddy" ]]; then
   now=$(date +%s)
   jq -n --argjson now "$now" '{
     id: "buddy", text: "🥚 /buddy", color: "dim",
-    priority: 90, row: 0, ttl_sec: 30, updated_at: $now
+    priority: 90, row: 3, ttl_sec: 30, updated_at: $now
   }' > "$REGION_FILE"
   exit 0
 fi
@@ -99,7 +99,7 @@ if [[ "$napping" == "true" ]]; then
   text="${face} ${name} 💤"
   color="dim"
   jq -n --arg t "$text" --arg c "$color" --argjson now "$now" '{
-    id: "buddy", text: $t, color: $c, row: 0,
+    id: "buddy", text: $t, color: $c, row: 3,
     priority: 90, ttl_sec: 30, updated_at: $now
   }' > "$REGION_FILE"
   exit 0
@@ -191,6 +191,6 @@ else
 fi
 
 jq -n --arg t "$text" --arg c "$color" --argjson now "$now" '{
-  id: "buddy", text: $t, color: $c, row: 0,
+  id: "buddy", text: $t, color: $c, row: 3,
   priority: 90, ttl_sec: 30, updated_at: $now
 }' > "$REGION_FILE"

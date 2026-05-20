@@ -11,7 +11,7 @@ REGION_FILE="$HOME/.claude/buddy/regions/meeting.json"
 CACHE_WINDOW=30
 PRIORITY=70
 TTL_SEC=60
-COLOR="magenta"
+COLOR="default"
 ID="meeting"
 
 NEXT_FILE="$HOME/.claude/next-meeting.txt"
@@ -52,12 +52,19 @@ if [[ -z "$content" ]]; then
   exit 0
 fi
 
-# Split "Name @ Date Time" so the magenta region color applies to the meeting
-# name only; the " @ Day Time" portion drops back to terminal default (white-ish).
+# Per-part coloring:
+#   📅 emoji          default
+#   meeting name      Catppuccin pink (256-color 218)
+#   " @ "             bright neutral (256-color 252)
+#   date/time         dim dark gray (90)
+PINK=$'\033[38;5;218m'
+BRIGHT=$'\033[38;5;252m'
+DIM=$'\033[90m'
+RST=$'\033[0m'
 if [[ "$content" == *" @ "* ]]; then
   _name="${content% @ *}"
   _dt="${content##* @ }"
-  write_region "📅 ${_name}"$'\033[38;5;252m'" @ ${_dt}"$'\033[0m'
+  write_region "📅 ${PINK}${_name}${RST}${BRIGHT} @ ${RST}${DIM}${_dt}${RST}"
 else
-  write_region "📅 ${content}"
+  write_region "📅 ${PINK}${content}${RST}"
 fi
