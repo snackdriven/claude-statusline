@@ -91,27 +91,41 @@ generated_at=$(jq -r '.generated_at // 0' "$CACHE_FILE" 2>/dev/null || echo 0)
 data_age=$(( NOW - generated_at ))
 
 # ─ Build the compact display text ────────────────────────────────────────
-# Show only non-zero buckets, with priority emoji-driven scan order.
-# Format: "🔥N 🟡N ✅N 🟢N 🧪N"  — drop zeros to save width.
+# Short text labels — easier to scan than emoji. Drop zero-count buckets.
+# Each label colored inline by what it means; separator stays dim.
+# Labels:
+#   ready    — open PR, approved, mergeStateStatus=CLEAN (act-now)     [red]
+#   blocked  — approved but not mergeable                              [yellow]
+#   merged   — merged in last 24h, ready to QA                         [green]
+#   review   — open PR awaiting review                                 [cyan]
+#   sonata   — Sonata ticket in `In Review` status                     [magenta]
+RED=$'\033[31m'
+YLW=$'\033[33m'
+CYN=$'\033[36m'
+TEAL=$'\033[38;5;115m'
+SKY=$'\033[38;5;117m'
+MAUVE=$'\033[38;5;141m'
+DIM=$'\033[90m'
+RST=$'\033[0m'
+
 parts=()
-(( ready > 0 ))      && parts+=("🔥$ready")
-(( blocked > 0 ))    && parts+=("🟡$blocked")
-(( merged > 0 ))     && parts+=("✅$merged")
-(( unapproved > 0 )) && parts+=("🟢$unapproved")
-(( sonata > 0 ))     && parts+=("🧪$sonata")
+(( ready > 0 ))      && parts+=("${RED}ready $ready${RST}")
+(( blocked > 0 ))    && parts+=("${YLW}blocked $blocked${RST}")
+(( merged > 0 ))     && parts+=("${TEAL}merged $merged${RST}")
+(( unapproved > 0 )) && parts+=("${SKY}review $unapproved${RST}")
+(( sonata > 0 ))     && parts+=("${MAUVE}sonata $sonata${RST}")
 
 if (( ${#parts[@]} == 0 )); then
   text="incoming: clear"
   color="dim"
 else
-  text=$(IFS=' '; echo "${parts[*]}")
-  # Color priority: 🔥 (act-now) > ✅ (ready-to-QA) > 🧪 > yellow > dim
-  if   (( ready > 0 ));   then color="red"
-  elif (( merged > 0 ));  then color="green"
-  elif (( sonata > 0 ));  then color="cyan"
-  elif (( blocked > 0 )); then color="yellow"
-  else color="dim"
-  fi
+  # Join with dim ` · ` separator (bash IFS only uses first char, so loop)
+  text=""
+  for p in "${parts[@]}"; do
+    if [[ -z "$text" ]]; then text="$p"; else text="${text}${DIM} · ${RST}${p}"; fi
+  done
+  # Region-level color set to default; inline ANSI codes drive per-part color
+  color="default"
 fi
 
 # If data is more than 30 min old, mark it visually
