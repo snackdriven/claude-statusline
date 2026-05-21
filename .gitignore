@@ -6,3 +6,6 @@ buddy/events.log
 # Producer outputs are runtime
 buddy/regions/*.json
 !buddy/regions/.gitkeep
+
+# macOS Finder cruft
+.DS_Store
