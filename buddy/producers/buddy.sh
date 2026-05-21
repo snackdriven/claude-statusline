@@ -88,6 +88,45 @@ face_for_species() {
   esac
 }
 
+# Per-species ANSI 256-color escape — mirrors cockpit's SPECIES_COLOR table
+# so the buddy looks identical across surfaces. Statusline picks one accent
+# per species and wraps the face with it. Source mapping documented in
+# memory pin reference-cockpit-buddy-panel-design-2026-05-21.
+species_color_for() {
+  case "$1" in
+    goose|mushroom|chonk|ferret)   echo $'\033[38;5;215m' ;;  # amber #ee9968
+    cat|owl|octopus|bat)           echo $'\033[38;5;141m' ;;  # sonata lavender #af87ff
+    rabbit)                        echo $'\033[38;5;218m' ;;  # meeting pink #ffafd7
+    penguin|robot)                 echo $'\033[38;5;117m' ;;  # review sky #87d7ff
+    snail|cactus|capybara)         echo $'\033[38;5;115m' ;;  # merged teal #87d7af
+    dragon)                        echo $'\033[38;5;167m' ;;  # urgency red #e35768
+    ghost|tardigrade|moth)         echo $'\033[38;5;247m' ;;  # subtext gray #8a8aaa
+    *)                             echo $'\033[38;5;253m' ;;  # default light
+  esac
+}
+
+# Eye cycle — substitutes the • (bullet) eye character with a state-aware
+# expression. Only applies to species whose face uses • as the eye marker
+# (cat, rabbit, penguin, robot, moth, ferret, cactus-via-♥, etc — see
+# face_for_species). Species with distinctive eyes (◉, ᵒ, @, ◕, etc) are
+# left alone because their eyes are part of the species silhouette.
+#
+# Priority: hunger > event > shiny > default.
+eye_for_state() {
+  local hunger="$1" event_kind="$2" shiny="$3"
+  if (( hunger < 30 )); then
+    echo "@"; return
+  fi
+  case "$event_kind" in
+    test_fail|error_loop) echo "×"; return ;;
+    git_commit|new_file)  echo "◉"; return ;;
+  esac
+  if [[ "$shiny" == "true" ]]; then
+    echo "✦"; return
+  fi
+  echo ""  # no override
+}
+
 now=$(date +%s)
 
 # Nap branch — short-circuit, no hearts/hunger
@@ -132,6 +171,24 @@ if [[ -n "$event_face" ]]; then
   face="$event_face"
 else
   face=$(face_for_species "$species" "$hour")
+fi
+
+# Eye-cycle: substitute • for the state-aware eye character. Only fires
+# for species whose face uses • as the eye marker. Faces with distinctive
+# eyes (◉ ᵒ @ ◕ ♥ ꖘ ◌) stay untouched.
+eye_override=$(eye_for_state "$hunger" "$event_kind" "$shiny")
+if [[ -n "$eye_override" && "$face" == *"•"* ]]; then
+  # Replace every • with the override char
+  face="${face//•/$eye_override}"
+fi
+
+# Per-species accent color wrap — applied AFTER eye substitution so the
+# color escape doesn't get mangled. Event face overrides species color
+# (event color is set on the whole region below).
+_SP_CLR=$'\033[0m'
+if [[ -z "$event_face" ]]; then
+  _SP_COLOR=$(species_color_for "$species")
+  face="${_SP_COLOR}${face}${_SP_CLR}"
 fi
 
 # Hearts (3 tiers) — inline ANSI so they're red/dim regardless of region color
