@@ -45,14 +45,20 @@ if status=$(gh auth status 2>/dev/null); then
 fi
 
 if [[ -z "$account" ]]; then
-  text="gh:?"
+  text="gh:?"; short="gh:?"
   color="yellow"
 else
   text="gh:${account}"
+  # short: abbreviate "user-at-org" → "u@org", drop the gh: prefix
+  if [[ "$account" == *-at-* ]]; then
+    short="${account%%-at-*}"; short="${short:0:1}@${account##*-at-}"
+  else
+    short="$account"
+  fi
   # Inline ANSI for Catppuccin 256-color palette (no native label for sky/peach)
   case "$account" in
-    kayla-at-chorus) text=$'\033[38;5;117m'"gh:${account}"$'\033[0m'; color="default" ;;
-    snackdriven)     text=$'\033[38;5;217m'"gh:${account}"$'\033[0m'; color="default" ;;
+    kayla-at-chorus) SK=$'\033[38;5;117m'; text="${SK}gh:${account}"$'\033[0m'; short="${SK}${short}"$'\033[0m'; color="default" ;;
+    snackdriven)     PK=$'\033[38;5;217m'; text="${PK}gh:${account}"$'\033[0m'; short="${PK}${short}"$'\033[0m'; color="default" ;;
     *)               color="yellow" ;;
   esac
 fi
@@ -61,10 +67,11 @@ now=$(date +%s)
 jq -n \
   --arg id "$ID" \
   --arg t "$text" \
+  --arg s "$short" \
   --arg c "$color" \
   --argjson p "$PRIORITY" \
   --argjson r "$ROW" \
   --argjson ttl "$TTL_SEC" \
   --argjson now "$now" \
-  '{id: $id, text: $t, color: $c, priority: $p, row: $r, ttl_sec: $ttl, updated_at: $now}' \
+  '{id: $id, text: $t, short: $s, color: $c, priority: $p, row: $r, ttl_sec: $ttl, updated_at: $now}' \
   > "$REGION_FILE"

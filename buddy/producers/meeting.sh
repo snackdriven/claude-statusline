@@ -25,16 +25,18 @@ fi
 
 write_region() {
   local text="$1"
+  local short="${2:-$1}"
   local now
   now=$(date +%s)
   jq -n \
     --arg id "$ID" \
     --arg t "$text" \
+    --arg s "$short" \
     --arg c "$COLOR" \
     --argjson p "$PRIORITY" \
     --argjson ttl "$TTL_SEC" \
     --argjson now "$now" \
-    '{id: $id, text: $t, color: $c, priority: $p, row: 2, ttl_sec: $ttl, updated_at: $now}' \
+    '{id: $id, text: $t, short: $s, color: $c, priority: $p, row: 2, ttl_sec: $ttl, updated_at: $now}' \
     > "$REGION_FILE"
 }
 
@@ -64,7 +66,12 @@ RST=$'\033[0m'
 if [[ "$content" == *" @ "* ]]; then
   _name="${content% @ *}"
   _dt="${content##* @ }"
-  write_region "📅 ${PINK}${_name}${RST}${BRIGHT} @ ${RST}${DIM}${_dt}${RST}"
+  # short variant: time-first + first word of the name → "📅 9:00a Deploy"
+  _time="${_dt##* }"
+  _word="${_name%% *}"
+  write_region \
+    "📅 ${PINK}${_name}${RST}${BRIGHT} @ ${RST}${DIM}${_dt}${RST}" \
+    "📅 ${DIM}${_time}${RST} ${PINK}${_word}${RST}"
 else
   write_region "📅 ${PINK}${content}${RST}"
 fi
