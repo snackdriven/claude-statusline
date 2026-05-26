@@ -60,6 +60,18 @@ shopt -u nullglob
 # Read + filter + sort regions in a single jq pass; emit TSV: row\ttext\tcolor
 # Sort first by row asc, then within-row by priority desc.
 now=$(date +%s)
+
+# ── Preferred path: zoned + adaptive assembler (assemble.py, dependency-free).
+# Groups regions into ◆-separated zones and shortens lowest-priority regions to
+# fit the budget. Width-independent (no edge positioning → never floats/wraps).
+# Falls back to the legacy single-pass bash assembly below if python3 is absent.
+_render_real="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+ASSEMBLER="$(dirname "$_render_real")/assemble.py"
+if command -v python3 >/dev/null 2>&1 && [[ -f "$ASSEMBLER" ]]; then
+  jq -s '.' "${region_files[@]}" 2>/dev/null | python3 "$ASSEMBLER" "$WIDTH_BUDGET" "$now"
+  exit 0
+fi
+
 tsv=$(jq -rs --argjson now "$now" '
   [
     .[]
