@@ -7,6 +7,7 @@ set -u
 
 REGION_FILE="$HOME/.claude/buddy/regions/buddy.json"
 BUDDY_FILE="$HOME/.claude/buddy.json"
+DIAL_FILE="$HOME/.local/share/dial/dial.json"
 
 # Self-cache: skip work if region was updated <5s ago
 if [[ -f "$REGION_FILE" ]]; then
@@ -105,6 +106,50 @@ species_color_for() {
   esac
 }
 
+# --- DIAL AWARENESS ---------------------------------------------------------
+# Read buddy's current dial channel (today's last reading from dial.json) so
+# the companion's expression can reflect what the user is tuned to. Per-
+# species channel-mood table below — buddy stays in-character per its
+# species (a ghost stays ghost-flavored, etc), the channel only modulates
+# the expression, not the silhouette.
+#
+# Falls back silently when dial is not installed or has no readings today.
+dial_channel=""
+if [[ -f "$DIAL_FILE" ]]; then
+  today=$(date +%Y-%m-%d)
+  dial_channel=$(jq -r --arg today "$today" '
+    [.entries[]? | select(.date == $today)] | last | .weather // ""
+  ' "$DIAL_FILE" 2>/dev/null || echo "")
+fi
+
+# Per-species channel moods. Each species mood map keeps the species'
+# core silhouette (ghost = round empty eyes ◌, capybara = ᵒᴗᵒ shape,
+# etc) and only varies the expression. Channels with no entry for a
+# given species → empty return → default species face stays.
+#
+# Priorities: dial channel mood RANKS BELOW event_face (10s windows
+# still win) and napping. Sits ABOVE the static species face — so the
+# day's current weather quietly modulates the buddy's resting state.
+channel_face_for() {
+  local sp="$1" ch="$2"
+  case "$sp" in
+    ghost)
+      # Wisp the ghost. Eyes stay ◌. Middle expression varies.
+      case "$ch" in
+        clear|sunny|clearing|prime_time) echo "(◌ᵒ◌)" ;;
+        fog|drizzle|overcast|rain|snow)  echo "(◌‿◌)" ;;
+        scrambled|windy)                 echo "(◌ᵕ◌)" ;;
+        storm|emergency)                 echo "(◎_◎)" ;;
+        no_signal)                       echo "( ‧ ‧ )" ;;
+        signed_off)                      echo "(-_-)" ;;
+        frost)                           echo "(◌°◌)" ;;
+        rerun)                           echo "(◌◡◌)" ;;
+      esac ;;
+    # Add other species' channel moods here as buddy is swapped/evolved.
+    # Empty → no override, default species face stays.
+  esac
+}
+
 # Eye cycle — substitutes the • (bullet) eye character with a state-aware
 # expression. Only applies to species whose face uses • as the eye marker
 # (cat, rabbit, penguin, robot, moth, ferret, cactus-via-♥, etc — see
@@ -167,10 +212,22 @@ if [[ -n "$current_event" && "$event_ts" != "0" ]]; then
 fi
 
 # Pick face
+# Priority: event_face (10s window) > dial channel mood > species default.
+# Dial mood only applies when (a) dial is installed + has a reading today,
+# AND (b) species has an entry in channel_face_for for that channel.
+# Otherwise the species default face stays.
 if [[ -n "$event_face" ]]; then
   face="$event_face"
 else
-  face=$(face_for_species "$species" "$hour")
+  channel_mood=""
+  if [[ -n "$dial_channel" ]]; then
+    channel_mood=$(channel_face_for "$species" "$dial_channel")
+  fi
+  if [[ -n "$channel_mood" ]]; then
+    face="$channel_mood"
+  else
+    face=$(face_for_species "$species" "$hour")
+  fi
 fi
 
 # Eye-cycle: substitute • for the state-aware eye character. Only fires
