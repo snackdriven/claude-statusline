@@ -55,7 +55,7 @@ jq -n \
   --arg id "$ID" \
   --arg text "$text" \
   --arg color "$color" \
-  --argjson row 0 \
+  --argjson row 3 \
   --argjson priority "$PRIORITY" \
   --argjson ttl "$TTL_SEC" \
   --argjson updated "$NOW" \
