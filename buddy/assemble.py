@@ -36,7 +36,7 @@ LAYOUT = {
     'project':  (0, 'ctx'),  'gh':       (0, 'ctx'),
     'coord':    (0, 'work'),  # transient + high-pri; in ctx it distorts zone-drop order
     'meeting':  (0, 'cal'),
-    'buddy':    (1, 'amb'),  'spotify':  (1, 'amb'),
+    'buddy':    (1, 'amb'),  'spotify':  (1, 'amb'),  'commits':  (1, 'amb'),
 }
 # Fixed left-to-right zone order (semantic, stable) — NOT priority-derived,
 # so zones don't reshuffle as counts change. Lower rank = further left.
