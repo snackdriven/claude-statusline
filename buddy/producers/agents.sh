@@ -43,14 +43,15 @@ entries=$(jq -rs --argjson now "$NOW" --argjson fresh "$FRESH_SEC" '
   ]
   | sort_by(-(.updated_at // 0))
   | .[]
-  | ((.agent_type // "agent") | if . == "-" then "agent" else . end) + ":" + (.tool // "?")
-    + (if (.detail // "") != "" then " " + .detail else "" end)
+  | ((.agent_type // "agent") | if . == "-" then "agent" else . end) + ": "
+    + ((.tool // "?") | split("__") | last)
+    + (if (.detail // "") != "" then " " + (.detail | .[0:28]) else "" end)
 ' "${files[@]}" 2>/dev/null)
 
 [[ -z "$entries" ]] && emit_empty
 
 total=$(echo "$entries" | wc -l | tr -d '[:space:]')
-shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/  │  /g')
+shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')
 extra=$(( total - MAX_SHOWN ))
 text="🤖 $shown"
 (( extra > 0 )) && text="$text +$extra"
