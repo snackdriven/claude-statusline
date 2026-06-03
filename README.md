@@ -60,6 +60,7 @@ Claude Code → buddy-status.sh (shim) → buddy/render.sh
 
 | File | Region | Row | Priority | TTL | What it shows |
 |---|---|---|---|---|---|
+| `agents.sh` | live subagents | 0 | 78 | 10s | `🤖 Explore:Read CHANGELOG.md` — running subagents in THIS session, from status files stamped by a PostToolUse/SubagentStop hook (`agent-status-stamp.sh`, lives in `~/.claude/hooks/`, not this repo). Empty region when no hook or no agents. |
 | `buddy.sh` | buddy companion | 0 | 90 | 30s | Pet face from `~/.claude/buddy.json` (better-buddy state, optional) |
 | `context.sh` | context window | 0 | 80 | 15s | `ctx 13%` from the live transcript JSONL |
 | `ticket.sh` | active ticket | 0 | 80 | 60s | Detected TTOAD ticket from filesystem activity, with idle timer |
