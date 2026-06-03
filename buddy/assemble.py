@@ -30,17 +30,22 @@ COLORS = {
 
 # Layout lives here (presentation concern), not scattered across producers.
 # id -> (row, group). Regions not listed keep their own row + group=id.
-# Row 0 reads: work ◆ ctx ◆ cal.  Row 1: ambient.
+# Row 0: work ◆ ctx ◆ cal.  Row 1: live activity.  Row 2: ambient.
 LAYOUT = {
     'ticket':   (0, 'work'), 'incoming': (0, 'work'),
     'project':  (0, 'ctx'),  'gh':       (0, 'ctx'),
     'coord':    (0, 'work'),  # transient + high-pri; in ctx it distorts zone-drop order
     'meeting':  (0, 'cal'),
-    'buddy':    (1, 'amb'),  'spotify':  (1, 'amb'),  'commits':  (1, 'amb'),
+    'agents':   (1, 'live'), 'sessions': (1, 'live'),
+    'buddy':    (2, 'amb'),  'spotify':  (2, 'amb'),  'commits':  (2, 'amb'),
 }
 # Fixed left-to-right zone order (semantic, stable) — NOT priority-derived,
 # so zones don't reshuffle as counts change. Lower rank = further left.
-ZONE_RANK = {'work': 0, 'ctx': 1, 'cal': 2, 'amb': 0}
+ZONE_RANK = {'work': 0, 'ctx': 1, 'cal': 2, 'live': 0, 'amb': 0}
+
+# Stable height: always print this many rows (empty rows render as a blank
+# placeholder) so the statusline never folds shorter and jumps the layout.
+MIN_ROWS = 3
 
 def vwidth(s):
     v = ANSI.sub('', s)
@@ -85,13 +90,12 @@ def main():
         return
 
     out_lines = []
-    for row in sorted({r['row'] for r in live}):
+    max_row = max(MIN_ROWS - 1, max(r['row'] for r in live))
+    for row in range(max_row + 1):
         items = [r for r in live if r['row'] == row]
-        line = assemble_row(items, budget)
-        if line:
-            out_lines.append(line)
-    if out_lines:
-        print('\n'.join(out_lines))
+        line = assemble_row(items, budget) if items else ''
+        out_lines.append(line if line else ' ')
+    print('\n'.join(out_lines))
 
 def assemble_row(items, budget):
     # Zone order: by each group's max priority desc; within a zone by priority desc.
