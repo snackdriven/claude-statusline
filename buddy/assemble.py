@@ -41,7 +41,8 @@ LAYOUT = {
 }
 # Fixed left-to-right zone order (semantic, stable) — NOT priority-derived,
 # so zones don't reshuffle as counts change. Lower rank = further left.
-ZONE_RANK = {'work': 0, 'ctx': 1, 'cal': 2, 'live': 0, 'amb': 0}
+# Row 0 reads right-to-left semantically: cal ◆ ctx ◆ work (reversed 2026-06-03).
+ZONE_RANK = {'cal': 0, 'ctx': 1, 'work': 2, 'live': 0, 'amb': 0}
 
 # Stable height: always print this many rows (empty rows render as a blank
 # placeholder) so the statusline never folds shorter and jumps the layout.
