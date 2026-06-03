@@ -53,7 +53,7 @@ entries=$(jq -rs --argjson now "$NOW" --argjson fresh "$FRESH_SEC" '
 total=$(echo "$entries" | wc -l | tr -d '[:space:]')
 shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')
 extra=$(( total - MAX_SHOWN ))
-text="🤖 $shown"
+text="🤖  $shown"
 (( extra > 0 )) && text="$text +$extra"
 
 jq -n --arg text "$text" --argjson now "$NOW" \
