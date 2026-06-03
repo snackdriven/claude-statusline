@@ -36,13 +36,13 @@ LAYOUT = {
     'project':  (0, 'ctx'),  'gh':       (0, 'ctx'),
     'coord':    (0, 'work'),  # transient + high-pri; in ctx it distorts zone-drop order
     'meeting':  (0, 'cal'),
-    'agents':   (1, 'live'), 'sessions': (1, 'live'),
+    'agents':   (1, 'live-agents'), 'sessions': (1, 'live-sessions'),
     'buddy':    (2, 'amb'),  'spotify':  (2, 'amb'),  'commits':  (2, 'amb'),
 }
 # Fixed left-to-right zone order (semantic, stable) — NOT priority-derived,
 # so zones don't reshuffle as counts change. Lower rank = further left.
 # Row 0 reads right-to-left semantically: cal ◆ ctx ◆ work (reversed 2026-06-03).
-ZONE_RANK = {'cal': 0, 'ctx': 1, 'work': 2, 'live': 0, 'amb': 0}
+ZONE_RANK = {'cal': 0, 'ctx': 1, 'work': 2, 'live-agents': 0, 'live-sessions': 1, 'amb': 0}
 
 # Stable height: always print this many rows (empty rows render as a blank
 # placeholder) so the statusline never folds shorter and jumps the layout.
