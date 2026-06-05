@@ -12,7 +12,7 @@ cd claude-statusline
 ./install.sh
 ```
 
-`install.sh` copies the shim + `buddy/` tree into `~/.claude/`, sets the `statusLine` command in `~/.claude/settings.json` to `bash ~/.claude/buddy-status.sh`, and wires a `SessionStart` hook that runs `session-reset.sh`.
+`install.sh` copies the shim + `buddy/` tree into `~/.claude/`, sets the `statusLine` command in `~/.claude/settings.json` to `bash ~/.claude/statusline.sh`, and strips any legacy settings.json-wired buddy hook entries (hooks + the `/buddy` command come from the `buddy@skills-dir` plugin at `~/.claude/skills/buddy/`, owned by the dotclaude backup repo — not this installer).
 
 Restart Claude Code to pick up the change.
 
@@ -29,7 +29,7 @@ Three rows. Each region produced by its own script, written to a JSON snapshot f
 ## Architecture
 
 ```
-Claude Code → buddy-status.sh (shim) → buddy/render.sh
+Claude Code → statusline.sh (shim) → buddy/render.sh
                                          ├─ forks all producers/*.sh in parallel (each self-caches via TTL)
                                          └─ reads regions/*.json, sorts, fits, colors, prints
 ```
