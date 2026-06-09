@@ -5,7 +5,7 @@
 
 set -u
 
-REGION_FILE="$HOME/.claude/buddy/regions/buddy.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/buddy.json"
 BUDDY_FILE="$HOME/.claude/buddy.json"
 DIAL_FILE="$HOME/.local/share/dial/dial.json"
 

@@ -8,7 +8,7 @@
 
 set -u
 
-REGION_FILE="$HOME/.claude/buddy/regions/agents.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/agents.json"
 STATUS_ROOT="$HOME/.claude/cache/agent-status"
 FRESH_SEC=120   # agent considered live if stamped within this window
 MAX_SHOWN=2     # named agents before collapsing to +N

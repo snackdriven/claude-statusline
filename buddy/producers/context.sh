@@ -18,7 +18,7 @@ set -u
 # shellcheck source=../lib/platform.sh
 source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
 
-REGION_FILE="$HOME/.claude/buddy/regions/context.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/context.json"
 CACHE_WINDOW=5
 PRIORITY=80   # row 0, after buddy (priority 90)
 TTL_SEC=15

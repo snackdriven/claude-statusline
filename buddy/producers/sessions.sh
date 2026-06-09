@@ -9,7 +9,7 @@
 
 set -u
 
-REGION_FILE="$HOME/.claude/buddy/regions/sessions.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/sessions.json"
 STATUS_ROOT="$HOME/.claude/cache/session-status"
 FRESH_SEC=300   # session considered live if stamped within this window
 MAX_SHOWN=2     # named sessions before collapsing to +N

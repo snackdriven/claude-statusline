@@ -14,7 +14,7 @@
 set -u
 
 BUDDY_DIR="$HOME/.claude/buddy"
-REGION_FILE="$BUDDY_DIR/regions/conscience.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$BUDDY_DIR/regions}/conscience.json"
 EVENTS_LOG="$BUDDY_DIR/events.log"
 INDEX="$BUDDY_DIR/conscience-index.json"
 COOLDOWNS="$BUDDY_DIR/.cooldowns.json"

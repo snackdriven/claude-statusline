@@ -22,6 +22,24 @@ SEPARATOR=" · "
 # Read stdin so producers can also consume it
 STDIN_JSON=$(cat 2>/dev/null || echo '{}')
 
+# Per-session regions: each terminal reads/writes its OWN regions dir so
+# concurrent sessions don't trample shared region files. Without this, a
+# producer's self-cache sees another session's recent write to the shared file,
+# skips, and this session ends up rendering the other session's data (the
+# flicker/swap). Producers inherit $BUDDY_REGION_DIR (exported here) and write there.
+_sid=$(echo "$STDIN_JSON" | jq -r '.session_id // empty' 2>/dev/null)
+if [[ -n "$_sid" && "$_sid" != "null" ]]; then
+  REGIONS_DIR="$BUDDY_DIR/regions/$_sid"
+fi
+mkdir -p "$REGIONS_DIR" 2>/dev/null
+export BUDDY_REGION_DIR="$REGIONS_DIR"
+# Prune stale per-session region dirs (<= once/hour; dirs untouched > 1 day).
+_sweep="$BUDDY_DIR/regions/.last-sweep"
+if [[ ! -f "$_sweep" ]] || (( $(date +%s) - $(stat -f %m "$_sweep" 2>/dev/null || echo 0) > 3600 )); then
+  : > "$_sweep" 2>/dev/null
+  find "$BUDDY_DIR/regions" -mindepth 1 -maxdepth 1 -type d -mtime +1 -exec rm -rf {} + 2>/dev/null
+fi
+
 # Width budget. Resolution order:
 #   1. $CLAUDE_STATUSLINE_WIDTH env override (set in shell rc when Claude
 #      under-reports width and you actually run a wide terminal)

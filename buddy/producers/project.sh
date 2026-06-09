@@ -7,7 +7,7 @@ set -u
 # shellcheck source=../lib/platform.sh
 source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
 
-REGION_FILE="$HOME/.claude/buddy/regions/project.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/project.json"
 CACHE_WINDOW=10
 PRIORITY=60
 TTL_SEC=30

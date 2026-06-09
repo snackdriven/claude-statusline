@@ -16,7 +16,7 @@ set -u
 # shellcheck source=../lib/platform.sh
 source "$(dirname "$0")/../lib/platform.sh" 2>/dev/null || true
 
-REGION_FILE="$HOME/.claude/buddy/regions/incoming.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/incoming.json"
 CACHE_FILE="$HOME/.claude/buddy/cache/incoming.json"
 SCRIPT_PATH="$HOME/Desktop/personal/scripts/incoming.ts"
 SCRIPT_CWD="$HOME/Desktop/personal"

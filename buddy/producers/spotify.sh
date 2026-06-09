@@ -5,7 +5,7 @@
 
 set -u
 
-REGION_FILE="$HOME/.claude/buddy/regions/spotify.json"
+REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/spotify.json"
 CACHE_WINDOW=10   # short so track changes appear within ~10s
 PRIORITY=45
 TTL_SEC=20
