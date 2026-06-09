@@ -38,20 +38,26 @@ done
 shopt -u nullglob
 (( ${#files[@]} == 0 )) && emit_empty
 
-# Collect fresh sessions: "cwd_base:tool detail" per line, newest first
-entries=$(jq -rs --argjson now "$NOW" --argjson fresh "$FRESH_SEC" '
-  [ .[]
-    | select(type == "object")
-    | select(($now - (.updated_at // 0)) <= $fresh)
-  ]
-  | sort_by(-(.updated_at // 0))
-  | .[]
-  | ((.cwd_base // "?") | if . == "-" then "?" else . end) + ": "
-    + ((.tool // "?") | split("__") | last)
-    + (if (.detail // "") != "" then " " + (.detail | .[0:28]) else "" end)
-' "${files[@]}" 2>/dev/null)
-
-[[ -z "$entries" ]] && emit_empty
+# Collect fresh sessions as "sync-name: tool detail", newest first.
+# Map each session_id (= the status filename) -> its daily sync-name; fall back
+# to cwd_base if the session has no name yet. (Status JSON carries no session_id,
+# so we loop per file instead of slurping.)
+_namedir="$HOME/.claude/cache/sync-names/$(date +%F)"
+_rows=()
+for f in "${files[@]}"; do
+  sid=$(basename "$f" .json)
+  IFS=$'\t' read -r upd tool detail < <(jq -r '[(.updated_at // 0), ((.tool // "?") | split("__") | last), ((.detail // "") | .[0:28])] | @tsv' "$f" 2>/dev/null)
+  [[ -z "${upd:-}" ]] && continue
+  (( NOW - upd > FRESH_SEC )) && continue
+  label=$(cat "$_namedir/$sid" 2>/dev/null)
+  [[ -z "$label" ]] && label=$(jq -r '(.cwd_base // "?") | if . == "-" then "?" else . end' "$f" 2>/dev/null)
+  _task="${tool}"; [[ -n "$detail" ]] && _task="${_task} ${detail}"
+  # name = bold pink (the WHO); ": task" = italic dim gray (the WHAT, ambient)
+  line=$'\033[1m\033[38;5;212m'"${label}"$'\033[0m\033[3m\033[90m'": ${_task}"$'\033[0m'
+  _rows+=("${upd} ${line}")
+done
+(( ${#_rows[@]} == 0 )) && emit_empty
+entries=$(printf '%s\n' "${_rows[@]}" | sort -rn | sed 's/^[0-9]* //')
 
 total=$(echo "$entries" | wc -l | tr -d '[:space:]')
 shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')

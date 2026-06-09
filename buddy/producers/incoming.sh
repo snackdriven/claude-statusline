@@ -107,13 +107,14 @@ SKY=$'\033[38;5;117m'
 MAUVE=$'\033[38;5;141m'
 DIM=$'\033[90m'
 RST=$'\033[0m'
+BLD=$'\033[1m'
 
 parts=()
-(( ready > 0 ))      && parts+=("${RED}ready $ready${RST}")
-(( blocked > 0 ))    && parts+=("${YLW}blocked $blocked${RST}")
-(( merged > 0 ))     && parts+=("${TEAL}merged $merged${RST}")
-(( unapproved > 0 )) && parts+=("${SKY}review $unapproved${RST}")
-(( sonata > 0 ))     && parts+=("${MAUVE}sonata $sonata${RST}")
+(( ready > 0 ))      && parts+=("${BLD}${RED}ready $ready${RST}")
+(( blocked > 0 ))    && parts+=("${BLD}${YLW}blocked $blocked${RST}")
+(( merged > 0 ))     && parts+=("${BLD}${TEAL}merged $merged${RST}")
+(( unapproved > 0 )) && parts+=("${BLD}${SKY}review $unapproved${RST}")
+(( sonata > 0 ))     && parts+=("${BLD}${MAUVE}sonata $sonata${RST}")
 
 if (( ${#parts[@]} == 0 )); then
   text="incoming: clear"
