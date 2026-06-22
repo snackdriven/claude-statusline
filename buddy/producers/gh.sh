@@ -34,7 +34,8 @@ command -v gh >/dev/null 2>&1 || exit 0
 #   ✓ Logged in to github.com account <name> (keyring)
 #   - Active account: true
 account=""
-if status=$(gh auth status 2>/dev/null); then
+status=$(gh auth status 2>&1) || true
+if [[ -n "$status" ]]; then
   account=$(awk '
     /Logged in to github.com account/ {
       match($0, /account [^ ]+/)

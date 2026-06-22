@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# pre-commit — keep README.md's producer inventory honest.
+#   --check  blocks the commit on mechanical drift (a producer with no table row,
+#            or a row with no producer).
+#   --audit  warns only — surfaces judgment-needed doc-promotion candidates into
+#            DOC-PROMOTION.md so they don't get lost. Never blocks.
+# Bypass once: git commit --no-verify.
+set -u
+REPO="$(git rev-parse --show-toplevel)"
+PY="$(command -v python3 || true)"
+[ -z "$PY" ] && exit 0   # fail open if python3 isn't available
+
+"$PY" "$REPO/buddy/check-readme.py" --audit || true
+
+if ! "$PY" "$REPO/buddy/check-readme.py" --check; then
+  echo "" >&2
+  echo "  ^ README producer table is out of sync. Fix it, then re-commit." >&2
+  echo "    (bypass once with: git commit --no-verify)" >&2
+  exit 1
+fi
+exit 0

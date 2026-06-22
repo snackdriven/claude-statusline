@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
-# sessions region producer — live activity of OTHER concurrent Claude sessions
-#
-# Reads per-session status files stamped by hooks/agent-status-stamp.sh:
-#   ~/.claude/cache/session-status/<session_id>.json
-# Excludes the rendering session itself. Shows sessions stamped within the
-# last 300s: "🖥 platform:Bash npm test | personal:Read foo.ts +1"
-# Region contract: {id, text, color, priority, row, ttl_sec, updated_at}
-
+# sessions region producer — the OTHER live Claude sessions (a presence ROSTER, not
+# just an activity feed). 2026-06-15: switched the source of "who's a worker" from
+# session-status freshness to real liveness, so idle-but-alive workers stop vanishing
+# after 300s. The roster comes from `sync-name-assign.py --live-roster` (daemon roster
+# ∪ presence files with a live claude pid — the pid-reuse-hardened liveness — ∩ today's
+# named ledger). Each live session shows its sync-name; ones that stamped a tool within
+# FRESH_SEC also show ": <tool> <detail>" (active), the rest show name-only (idle).
+# Excludes the rendering session. Region contract: {id,text,color,priority,row,ttl_sec,updated_at}.
 set -u
 
 REGION_FILE="${BUDDY_REGION_DIR:-$HOME/.claude/buddy/regions}/sessions.json"
 STATUS_ROOT="$HOME/.claude/cache/session-status"
-FRESH_SEC=300   # session considered live if stamped within this window
-MAX_SHOWN=2     # named sessions before collapsing to +N
+SCRIPT="$HOME/.claude/scripts/sync-name-assign.py"
+FRESH_SEC=300   # tool-activity annotation window; idle-but-live sessions still show (name only)
+MAX_SHOWN=3     # entries before collapsing to +N
 
 NOW=$(date +%s)
 mkdir -p "$(dirname "$REGION_FILE")"
@@ -27,40 +28,45 @@ emit_empty() {
   exit 0
 }
 
-[[ -d "$STATUS_ROOT" ]] || emit_empty
+# Who's live (sid<TAB>name). The ledger/liveness logic lives in the one engine.
+roster=$(python3 "$SCRIPT" --live-roster 2>/dev/null)
+[[ -z "$roster" ]] && emit_empty
 
-shopt -s nullglob
-files=()
-for f in "$STATUS_ROOT"/*.json; do
-  [[ "$(basename "$f" .json)" == "$self_id" ]] && continue
-  files+=("$f")
-done
-shopt -u nullglob
-(( ${#files[@]} == 0 )) && emit_empty
+active=()   # "updated_at <styled line>" — sessions that tool-acted within FRESH_SEC
+idle=()     # "<styled line>" — alive but quiet
+while IFS=$'\t' read -r sid name; do
+  [[ -z "$sid" || -z "$name" ]] && continue
+  [[ "$sid" == "$self_id" ]] && continue
+  task=""
+  f="$STATUS_ROOT/$sid.json"
+  if [[ -f "$f" ]]; then
+    IFS=$'\t' read -r u tool detail < <(jq -r '[(.updated_at // 0), ((.tool // "?") | split("__") | last), ((.detail // "") | .[0:24])] | @tsv' "$f" 2>/dev/null)
+    if [[ -n "${u:-}" ]] && (( NOW - u <= FRESH_SEC )); then
+      task="$tool"; [[ -n "$detail" ]] && task="$task $detail"
+    fi
+  fi
+  if [[ -n "$task" ]]; then
+    # name = bold pink (WHO); ": task" = italic dim gray (WHAT, ambient)
+    line=$'\033[1m\033[38;5;212m'"${name}"$'\033[0m\033[3m\033[90m'": ${task}"$'\033[0m'
+    active+=("${u} ${line}")
+  else
+    line=$'\033[1m\033[38;5;212m'"${name}"$'\033[0m'
+    idle+=("${line}")
+  fi
+done <<< "$roster"
 
-# Collect fresh sessions as "sync-name: tool detail", newest first.
-# Map each session_id (= the status filename) -> its daily sync-name; fall back
-# to cwd_base if the session has no name yet. (Status JSON carries no session_id,
-# so we loop per file instead of slurping.)
-_namedir="$HOME/.claude/cache/sync-names/$(date +%F)"
-_rows=()
-for f in "${files[@]}"; do
-  sid=$(basename "$f" .json)
-  IFS=$'\t' read -r upd tool detail < <(jq -r '[(.updated_at // 0), ((.tool // "?") | split("__") | last), ((.detail // "") | .[0:28])] | @tsv' "$f" 2>/dev/null)
-  [[ -z "${upd:-}" ]] && continue
-  (( NOW - upd > FRESH_SEC )) && continue
-  label=$(cat "$_namedir/$sid" 2>/dev/null)
-  [[ -z "$label" ]] && label=$(jq -r '(.cwd_base // "?") | if . == "-" then "?" else . end' "$f" 2>/dev/null)
-  _task="${tool}"; [[ -n "$detail" ]] && _task="${_task} ${detail}"
-  # name = bold pink (the WHO); ": task" = italic dim gray (the WHAT, ambient)
-  line=$'\033[1m\033[38;5;212m'"${label}"$'\033[0m\033[3m\033[90m'": ${_task}"$'\033[0m'
-  _rows+=("${upd} ${line}")
-done
-(( ${#_rows[@]} == 0 )) && emit_empty
-entries=$(printf '%s\n' "${_rows[@]}" | sort -rn | sed 's/^[0-9]* //')
+# active first (most-recent activity → oldest), then idle (ledger order)
+ordered=()
+if (( ${#active[@]} > 0 )); then
+  while IFS= read -r l; do ordered+=("$l"); done < <(printf '%s\n' "${active[@]}" | sort -rn | sed 's/^[0-9]* //')
+fi
+if (( ${#idle[@]} > 0 )); then
+  ordered+=("${idle[@]}")
+fi
+(( ${#ordered[@]} == 0 )) && emit_empty
 
-total=$(echo "$entries" | wc -l | tr -d '[:space:]')
-shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')
+total=${#ordered[@]}
+shown=$(printf '%s\n' "${ordered[@]}" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')
 extra=$(( total - MAX_SHOWN ))
 text="🖥  $shown"
 (( extra > 0 )) && text="$text +$extra"

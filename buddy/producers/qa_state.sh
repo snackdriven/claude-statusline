@@ -26,7 +26,7 @@
 set -u
 
 BUDDY_DIR="$HOME/.claude/buddy"
-REGIONS="$BUDDY_DIR/regions"
+REGIONS="${BUDDY_REGION_DIR:-$BUDDY_DIR/regions}"
 NOW=$(date +%s)
 TODAY=$(date +%Y-%m-%d)
 

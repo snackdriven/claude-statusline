@@ -41,7 +41,12 @@ if branch=$(cd "$cwd" 2>/dev/null && git symbolic-ref --short HEAD 2>/dev/null);
   dirty_count=$(cd "$cwd" 2>/dev/null && git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 fi
 
-if [[ -n "$branch" ]]; then
+if [[ "$basename" == "personal" && "$branch" == "main" ]]; then
+  # The vault on main never changes — "personal on main" is dead weight in the
+  # prime first-line slot. Hide it here; code repos + non-main branches still
+  # show (the branch is the signal there).
+  text=""
+elif [[ -n "$branch" ]]; then
   # basename (region color) · dim " on " · bold branch.
   # Dirty count dropped — always-large noise on the auto-committed vault.
   text="${basename}"$'\033[90m'" on "$'\033[0m\033[1m'"${branch}"$'\033[0m'
@@ -49,13 +54,21 @@ else
   text="${basename}"
 fi
 
+# Clickable: vault → Obsidian, any other repo → Finder (file://).
+if [[ "$basename" == "personal" ]]; then
+  href="obsidian://open?path=$(jq -rn --arg p "$cwd" '$p|@uri')"
+else
+  href="file://$cwd"
+fi
+
 now=$(date +%s)
 jq -n \
   --arg id "$ID" \
   --arg t "$text" \
   --arg c "$COLOR" \
+  --arg h "$href" \
   --argjson p "$PRIORITY" \
   --argjson ttl "$TTL_SEC" \
   --argjson now "$now" \
-  '{id: $id, text: $t, color: $c, priority: $p, row: 1, ttl_sec: $ttl, updated_at: $now}' \
+  '{id: $id, text: $t, color: $c, href: $h, priority: $p, row: 1, ttl_sec: $ttl, updated_at: $now}' \
   > "$REGION_FILE"

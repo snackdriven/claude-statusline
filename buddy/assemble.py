@@ -33,9 +33,9 @@ COLORS = {
 # Row 0: work ◆ ctx ◆ cal.  Row 1: live activity.  Row 2: ambient.
 LAYOUT = {
     'ticket':   (0, 'work'), 'incoming': (0, 'work'),
-    'project':  (0, 'ctx'),  'gh':       (0, 'ctx'),
+    'project':  (0, 'ctx'),  'gh':       (0, 'work'),  'pr':       (0, 'work'),
     'coord':    (0, 'work'),  # transient + high-pri; in ctx it distorts zone-drop order
-    'meeting':  (0, 'cal'),
+    'meeting':  (2, 'cal'),
     'agents':   (1, 'live-agents'), 'sessions': (1, 'live-sessions'),
     'buddy':    (2, 'amb'),  'spotify':  (2, 'amb'),  'commits':  (2, 'amb'),
 }
@@ -52,8 +52,14 @@ def vwidth(s):
     v = ANSI.sub('', s)
     return sum(2 if ord(c) > 0xFFFF else 1 for c in v)
 
-def wrap(text, color):
-    return COLORS.get(color, COLORS['default']) + text + RESET
+def wrap(text, color, href=None):
+    body = COLORS.get(color, COLORS['default']) + text + RESET
+    if not href:
+        return body
+    # OSC 8 hyperlink, applied at the final render step so the URL never counts
+    # toward width (vwidth strips only SGR) and never gets truncated (variants
+    # swap whole text↔short, never mid-string). Cmd/Ctrl+click opens it.
+    return '\033]8;;' + href + '\a' + body + '\033]8;;\a'
 
 def main():
     budget = int(sys.argv[1]) if len(sys.argv) > 1 else 116
@@ -82,6 +88,7 @@ def main():
         live.append({
             'text': text,
             'short': r.get('short') or text,
+            'href': r.get('href'),
             'color': r.get('color', 'default'),
             'group': group,
             'pri': r.get('priority', 0),
@@ -144,7 +151,7 @@ def assemble_row(items, budget):
         return ''
     rendered_zones = []
     for z in zs:
-        rendered_zones.append(INTRA.join(wrap(it[variant[id(it)]], it['color']) for it in z))
+        rendered_zones.append(INTRA.join(wrap(it[variant[id(it)]], it['color'], it.get('href')) for it in z))
     return ZONE_DIV.join(rendered_zones)
 
 if __name__ == '__main__':

@@ -9,3 +9,4 @@ buddy/regions/*.json
 
 # macOS Finder cruft
 .DS_Store
+DOC-PROMOTION.md

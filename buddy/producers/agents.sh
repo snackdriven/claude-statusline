@@ -3,7 +3,7 @@
 #
 # Reads per-agent status files stamped by hooks/agent-status-stamp.sh:
 #   ~/.claude/cache/agent-status/<session_id>/<agent_id>.json
-# Shows agents stamped within the last 120s: "🤖 Explore:Grep auth.ts | qa-video:Bash"
+# Shows agents stamped within the last 120s: "↳ Explore:Grep auth.ts | qa-video:Bash"
 # Region contract: {id, text, color, priority, row, ttl_sec, updated_at}
 
 set -u
@@ -53,7 +53,7 @@ entries=$(jq -rs --argjson now "$NOW" --argjson fresh "$FRESH_SEC" '
 total=$(echo "$entries" | wc -l | tr -d '[:space:]')
 shown=$(echo "$entries" | head -n "$MAX_SHOWN" | paste -sd '|' - | sed 's/|/   │   /g')
 extra=$(( total - MAX_SHOWN ))
-text="🤖  $shown"
+text="↳ $shown"
 (( extra > 0 )) && text="$text +$extra"
 
 jq -n --arg text "$text" --argjson now "$NOW" \

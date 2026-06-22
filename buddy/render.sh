@@ -19,6 +19,18 @@ REGIONS_DIR="$BUDDY_DIR/regions"
 PRODUCERS_DIR="$BUDDY_DIR/producers"
 SEPARATOR=" · "
 
+# ── Renderer set (decoupling) ───────────────────────────────────────────────
+# The bar is two independently-toggleable producer sets sharing this one
+# composer + assemble.py layout engine:
+#   • buddy — the companion creature + its conscience + ambient (spotify)
+#   • info  — everything else (work / context / live-activity regions)
+# `render.sh <set>` forks ONLY that set's producers into its own per-session
+# regions subdir and prints just that set's line(s). No arg = legacy "all"
+# (back-compat for manual runs + anything still calling render.sh bare).
+BUDDY_PRODUCERS="buddy conscience spotify"   # the companion set; all others = info
+SET="${1:-}"
+case "$SET" in info|buddy|"") ;; *) SET="" ;; esac
+
 # Read stdin so producers can also consume it
 STDIN_JSON=$(cat 2>/dev/null || echo '{}')
 
@@ -31,7 +43,14 @@ _sid=$(echo "$STDIN_JSON" | jq -r '.session_id // empty' 2>/dev/null)
 if [[ -n "$_sid" && "$_sid" != "null" ]]; then
   REGIONS_DIR="$BUDDY_DIR/regions/$_sid"
 fi
+_sid_dir="$REGIONS_DIR"
+# Each set reads/writes its OWN regions subdir so the two passes never see each
+# other's region files (and self-caches stay per-set).
+[[ -n "$SET" ]] && REGIONS_DIR="$REGIONS_DIR/$SET"
 mkdir -p "$REGIONS_DIR" 2>/dev/null
+# Keep the session dir fresh so the hourly sweep (mtime > 1d) doesn't reap an
+# active session whose writes now land in a per-set subdir, not the sid dir.
+touch "$_sid_dir" 2>/dev/null
 export BUDDY_REGION_DIR="$REGIONS_DIR"
 # Prune stale per-session region dirs (<= once/hour; dirs untouched > 1 day).
 _sweep="$BUDDY_DIR/regions/.last-sweep"
@@ -63,6 +82,13 @@ if [[ -d "$PRODUCERS_DIR" ]]; then
   shopt -s nullglob
   for p in "$PRODUCERS_DIR"/*.sh; do
     [[ -f "$p" ]] || continue
+    if [[ -n "$SET" ]]; then
+      _id="$(basename "$p" .sh)"
+      _is_buddy=0
+      for _b in $BUDDY_PRODUCERS; do [[ "$_id" == "$_b" ]] && { _is_buddy=1; break; }; done
+      [[ "$SET" == "buddy" && $_is_buddy -eq 0 ]] && continue
+      [[ "$SET" == "info"  && $_is_buddy -eq 1 ]] && continue
+    fi
     echo "$STDIN_JSON" | bash "$p" >/dev/null 2>&1 &
   done
   shopt -u nullglob
@@ -86,7 +112,18 @@ now=$(date +%s)
 _render_real="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
 ASSEMBLER="$(dirname "$_render_real")/assemble.py"
 if command -v python3 >/dev/null 2>&1 && [[ -f "$ASSEMBLER" ]]; then
-  jq -s '.' "${region_files[@]}" 2>/dev/null | python3 "$ASSEMBLER" "$WIDTH_BUDGET" "$now"
+  _out=$(jq -s '.' "${region_files[@]}" 2>/dev/null | python3 "$ASSEMBLER" "$WIDTH_BUDGET" "$now")
+  if [[ -n "$SET" ]]; then
+    # SET mode: drop the blank placeholder rows the OTHER set would occupy.
+    # assemble.py pads empty rows with " " for stable height in all-mode; here
+    # we want only this set's non-empty line(s).
+    while IFS= read -r _ln; do
+      _bare=$(printf '%s' "$_ln" | sed $'s/\033\\[[0-9;]*m//g' | tr -d '[:space:]')
+      [[ -n "$_bare" ]] && printf '%s\n' "$_ln"
+    done <<< "$_out"
+  else
+    printf '%s\n' "$_out"
+  fi
   exit 0
 fi
 

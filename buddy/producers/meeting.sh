@@ -26,6 +26,7 @@ fi
 write_region() {
   local text="$1"
   local short="${2:-$1}"
+  local href="https://calendar.google.com/calendar/u/0/r"   # click → Google Calendar (default browser)
   local now
   now=$(date +%s)
   jq -n \
@@ -33,10 +34,11 @@ write_region() {
     --arg t "$text" \
     --arg s "$short" \
     --arg c "$COLOR" \
+    --arg h "$href" \
     --argjson p "$PRIORITY" \
     --argjson ttl "$TTL_SEC" \
     --argjson now "$now" \
-    '{id: $id, text: $t, short: $s, color: $c, priority: $p, row: 2, ttl_sec: $ttl, updated_at: $now}' \
+    '{id: $id, text: $t, short: $s, color: $c, href: $h, priority: $p, row: 2, ttl_sec: $ttl, updated_at: $now}' \
     > "$REGION_FILE"
 }
 

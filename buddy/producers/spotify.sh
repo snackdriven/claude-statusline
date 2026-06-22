@@ -22,16 +22,17 @@ fi
 mkdir -p "$(dirname "$REGION_FILE")"
 now=$(date +%s)
 
-write_region() {
+write_region() {  # text color [href]
   jq -n \
     --arg id   "$ID" \
     --arg t    "$1" \
     --arg c    "$2" \
+    --arg h    "${3:-}" \
     --argjson p   "$PRIORITY" \
     --argjson row "$ROW" \
     --argjson ttl "$TTL_SEC" \
     --argjson now "$now" \
-    '{id: $id, text: $t, color: $c, priority: $p, row: $row, ttl_sec: $ttl, updated_at: $now}' \
+    '{id: $id, text: $t, color: $c, href: $h, priority: $p, row: $row, ttl_sec: $ttl, updated_at: $now}' \
     > "$REGION_FILE"
 }
 
@@ -65,4 +66,5 @@ fi
 BRIGHT=$'\033[38;5;252m'
 PURPLE=$'\033[38;5;141m'
 RST=$'\033[0m'
-write_region "${BRIGHT}♪${RST} ${PURPLE}${track}${RST}" "default"
+# Clickable: foreground the Spotify app (bare scheme — no playback side-effect).
+write_region "${BRIGHT}♪${RST} ${PURPLE}${track}${RST}" "default" "spotify://"

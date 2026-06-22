@@ -20,6 +20,7 @@ chmod +x "$CLAUDE_DIR/statusline.sh"
 
 # Renderer + producers + tooling
 cp "$REPO_DIR/buddy/render.sh" "$CLAUDE_DIR/buddy/render.sh"
+cp "$REPO_DIR/buddy/assemble.py" "$CLAUDE_DIR/buddy/assemble.py"
 cp "$REPO_DIR/buddy/session-reset.sh" "$CLAUDE_DIR/buddy/session-reset.sh"
 cp "$REPO_DIR/buddy/build-conscience-index.sh" "$CLAUDE_DIR/buddy/build-conscience-index.sh"
 cp "$REPO_DIR/buddy/conscience-index.json" "$CLAUDE_DIR/buddy/conscience-index.json"

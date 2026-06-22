@@ -29,10 +29,16 @@ Three rows. Each region produced by its own script, written to a JSON snapshot f
 ## Architecture
 
 ```
-Claude Code → statusline.sh (shim) → buddy/render.sh
-                                         ├─ forks all producers/*.sh in parallel (each self-caches via TTL)
-                                         └─ reads regions/*.json, sorts, fits, colors, prints
+Claude Code → statusline.sh (shim) ┬→ render.sh info   (work / context / live regions)
+                                   └→ render.sh buddy  (companion creature + conscience + ambient)
+
+   each pass: forks ONLY its set's producers/*.sh in parallel (TTL self-cache)
+              → reads its own regions/<sid>/<set>/*.json
+              → assemble.py lays out the zones, fits the width, colors
+              → prints its line(s); the shim stacks info on top, buddy below
 ```
+
+The shim runs the two passes independently and stacks them. Either side can be turned off on its own (see "Two renderers" below), and `render.sh <set>` is callable standalone if you want one set somewhere else (a tmux bar, a shell prompt).
 
 **Region contract** (each producer writes one):
 
@@ -44,11 +50,15 @@ Claude Code → statusline.sh (shim) → buddy/render.sh
   "row": 0,
   "priority": 80,
   "ttl_sec": 60,
-  "updated_at": 1777497903
+  "updated_at": 1777497903,
+  "short": "TTOAD-44",
+  "href": "https://chorusapp.atlassian.net/browse/TTOAD-44"
 }
 ```
 
-**Render rules** (`buddy/render.sh`):
+Required: `id` and `text`. Optional: `short` (a compact variant the layout swaps to when a row won't fit), `group` (zone grouping for `assemble.py`), `href` (makes the region a clickable link — see [Clickable regions](#clickable-regions-osc-8-links)), plus `color` / `row` / `priority` / `ttl_sec`, all defaulted.
+
+**Render rules** (`buddy/render.sh` + `buddy/assemble.py`):
 - Sort by `row` asc, then `priority` desc within row
 - Drop entries where `now - updated_at > ttl_sec`
 - Width budget per row defaults from `.terminal.width` (Claude Code stdin JSON), falls back to `tput cols`, then 120. Separator ` · `, ANSI colors (dim / cyan / magenta / yellow / red / green)
@@ -56,15 +66,41 @@ Claude Code → statusline.sh (shim) → buddy/render.sh
 - Width overflow drops the next region silently, no truncation
 - Empty rows skipped
 
+## Two renderers (info + buddy)
+
+The bar is two independent passes over disjoint producer sets, sharing the one `render.sh` composer + `assemble.py` layout engine:
+
+- **info** — everything that's work/context: project, gh, coord, tickets, incoming, sessions, agents, cron, the op-co-mi / qa-brain bridges.
+- **buddy** — the companion: the creature (`buddy.sh`), its `conscience.sh` hint, and ambient `spotify.sh`.
+
+Set membership lives in one variable at the top of `render.sh` (`BUDDY_PRODUCERS`); everything not listed there is info. Each pass writes to its own `regions/<sid>/<set>/` dir so the two never read each other's snapshots.
+
+**Toggles** (set in your shell rc, default both on):
+
+```bash
+export STATUSLINE_INFO=0    # hide the info bar, keep the companion
+export STATUSLINE_BUDDY=0   # hide the companion, keep the info bar
+```
+
+`render.sh info` / `render.sh buddy` also run standalone, so you can drop one set into a different host (tmux status, shell prompt) without the other. `render.sh` with no arg is the legacy all-producers mode.
+
 ## Producers
+
+Set: `buddy.sh`, `conscience.sh`, and `spotify.sh` render in the companion pass; every other producer is info.
+
+
 
 | File | Region | Row | Priority | TTL | What it shows |
 |---|---|---|---|---|---|
 | `agents.sh` | live subagents | 0 | 78 | 10s | `🤖 Explore:Read CHANGELOG.md` — running subagents in THIS session, from status files stamped by a PostToolUse/SubagentStop hook (`agent-status-stamp.sh`, lives in `~/.claude/hooks/`, not this repo). Empty region when no hook or no agents. |
 | `buddy.sh` | buddy companion | 0 | 90 | 30s | Pet face from `~/.claude/buddy.json` (better-buddy state, optional) |
+| `cron.sh` | scheduled-job health | 0 | 85 | 120s | `⚙ N jobs ✗` (red) when launchd/cron jobs failed today, read from `~/.claude/logs/cron-failures.log`. Empty when clean, so it's invisible until something breaks. Display-only, not an alert. |
 | `context.sh` | context window | 0 | 80 | 15s | `ctx 13%` from the live transcript JSONL |
 | `ticket.sh` | active ticket | 0 | 80 | 60s | Detected TTOAD ticket from filesystem activity, with idle timer |
+| `incoming.sh` | incoming queue | 0 | 70 | 10m | `ready 3 · review 1 · sonata 2` — open-PR readiness + Sonata In-Review counts from `scripts/incoming.ts --summary`. Refreshes in the background and renders the cached value. |
+| `pr.sh` | active PR | 0 | 58 | 2m | `PR #4378` from Claude Code stdin `.pr`, only when the branch has an open PR. Clickable to the PR (see [Clickable regions](#clickable-regions-osc-8-links)). |
 | `coord.sh` | coordinator | 1 | 75 | 30s | Multi-session coordinator heartbeat + worker dots |
+| `sessions.sh` | other sessions | 1 | 77 | 15s | Live activity of OTHER concurrent Claude sessions (their sync-names + last action) |
 | `project.sh` | project | 1 | 60 | 30s | `client-intake on main+5` (basename + branch + dirty count) |
 | `gh.sh` | active gh account | 1 | 55 | 60s | `gh:<account>` — color-coded so personal/work mix-ups are loud. Edit the case statement to change the color map. |
 | `meeting.sh` | next meeting | 2 | 50 | 60s | From `~/.claude/next-meeting.txt` |
@@ -73,9 +109,27 @@ Claude Code → statusline.sh (shim) → buddy/render.sh
 | `op_core.sh` | op-co-mi bridge | 0–2 | 30–70 | 60s | 4 regions sourced from [operator-core-mini](https://github.com/snackdriven/operator-core-mini) (carry-state on row 0, today's meeting + freshness nudge on row 2, consent-gate banner on row 2) |
 | `qa_state.sh` | qa-brain bridge | 0,2 | 55–75 | 45s | Today's TTOAD ticket counts (`in-review`, `in-progress`) on row 0 and optional next in-scope release date on row 2, sourced from [qa-brain](https://github.com/snackdriven/qa-brain) at `localhost:3737` |
 
-**Row layout:** row 0 = critical at-a-glance (buddy, context, ticket, op_carry, qa_states), row 1 = active session context (coord, project, gh), row 2 = ambient (meeting, op_meeting, op_verify, qa_release, op_consent, spotify), row 3 = rule hints (conscience).
+**Row layout:** row 0 = critical at-a-glance (buddy, context, ticket, op_carry, qa_states), row 1 = active session context (coord, project, gh), row 2 = ambient (meeting, op_meeting, op_verify, qa_release, op_consent, spotify), row 3 = rule hints (conscience). Final placement is set by the `LAYOUT` map in `buddy/assemble.py`, which overrides a producer's declared `row` for listed regions and groups them into `◆`-separated zones; regions not in `LAYOUT` keep their own `row`.
+
+**Enabled vs disabled:** every producer above ships in the repo, but each install turns them on or off independently. In `~/.claude/buddy/producers/`, a producer is active as `<name>.sh` and off as `<name>.sh.disabled` (the renderer only globs `*.sh`).
 
 Each producer runs as `bash producer.sh` with the Claude Code statusline JSON piped to stdin (`workspace.current_dir`, `transcript_path`, etc). Producers self-cache by checking their region file's `updated_at` against TTL, so the renderer parallelism is cheap.
+
+## Clickable regions (OSC 8 links)
+
+Any region can be a clickable link. Set an `href` on the region JSON and `assemble.py` wraps the rendered text in an [OSC 8 hyperlink](https://en.wikipedia.org/wiki/ANSI_escape_code#OSC) as the final layout step, so the URL never counts against the width budget and never gets cut when a row is shortened. Cmd+click (macOS) or Ctrl+click (Linux/Windows) opens it.
+
+The click is a terminal-level open, not a Claude Code action: the terminal hands the URL to the OS, so it can target any scheme the OS resolves (`https://`, `obsidian://`, `file://`, `spotify://`). It needs a terminal that supports OSC 8 hyperlinks (iTerm2, Kitty, WezTerm). Terminal.app doesn't; tmux strips the sequence unless `set -g allow-passthrough on`.
+
+| Region | Click opens |
+|---|---|
+| `pr` | the active PR on GitHub |
+| `project` | the current directory (Obsidian for the vault, Finder otherwise) |
+| `spotify` | the Spotify app (`spotify://`) |
+| `meeting` | Google Calendar (in your default browser) |
+| sync-name (prepended in `statusline.sh`) | today's cross-terminal daily-sync doc |
+
+To make any other region clickable, set `href` in its producer's JSON.
 
 ## Conscience system
 
@@ -145,6 +199,8 @@ export QA_STATE_CACHE_SECONDS=15             # default 15
 ## Customizing
 
 - **Add a region** → write `buddy/producers/<name>.sh` that emits `buddy/regions/<name>.json`. Pick a row + priority that doesn't fight the existing producers. Set TTL to whatever cadence the data updates at. No renderer changes needed.
+- **Enable / disable a producer** → rename its symlink in `~/.claude/buddy/producers/` between `<name>.sh` and `<name>.sh.disabled`. No repo change.
+- **Make a region clickable** → set `href` in its producer's JSON ([Clickable regions](#clickable-regions-osc-8-links)).
 - **Add a conscience rule** → edit `buddy/build-conscience-index.sh`, run it.
 - **Renderer changes** (width budget, separator, color map) → `buddy/render.sh`.
 - **Wiring changes** → `~/.claude/settings.json`.
