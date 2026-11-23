@@ -1,16 +1,8 @@
-<div align="center">
-
 # claude-statusline
 
-**a small perch for the things you keep checking.**
+**the branch is right there. i will still check it twice.**
 
-🍪 &nbsp; Claude Code · terminal · optional company
-
-</div>
-
-A status bar for Claude Code. It shows session details, such as context use, the active ticket, and the current branch.
-
-Add [better-buddy](https://github.com/snackdriven/better-buddy) for a terminal companion.
+A few lines under Claude Code for the ticket, context use, and other things I keep looking away to check. The optional [better-buddy](https://github.com/snackdriven/better-buddy) gets a seat too.
 
 ```text
 (•ω•) ★ Bandit ❤❤❤ · ctx 13% · TTOAD-44 … idle 99m
@@ -34,7 +26,7 @@ Restart Claude Code.
 
 The installer sets the `statusLine` command and removes legacy buddy hooks. Get the buddy plugin from the `dotclaude` backup for `/buddy` and its hooks.
 
-## Choose what appears
+## Choose the company
 
 The information bar and companion bar are on by default. Add the applicable setting to your shell configuration:
 
@@ -47,9 +39,9 @@ To disable one producer, rename its installed file from `<name>.sh` to `<name>.s
 
 To set the terminal width, set `CLAUDE_STATUSLINE_WIDTH` to a column count.
 
-## Producers
+## Who supplies the gossip
 
-A **producer** is a script that supplies one or more display regions. Some producers need separate tools, hooks, or local services.
+Each **producer** is a script that supplies part of the bar. Some need separate tools, hooks, or local services.
 
 | Script | Shows |
 | --- | --- |
@@ -72,7 +64,7 @@ A **producer** is a script that supplies one or more display regions. Some produ
 
 The companion bar uses `buddy.sh`, `conscience.sh`, and `spotify.sh`. The information bar uses the other producers.
 
-## Technical reference
+## How the bar works
 
 See [the reference](docs/reference.md) for:
 
