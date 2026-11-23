@@ -2,8 +2,6 @@
 
 [README](../README.md) · [Install](../README.md#install) · [Producers](../README.md#producers)
 
-<sub>Reference sections moved by Codex (GPT-6 AI agent). Technical content retained from the existing README.</sub>
-
 ## Architecture
 
 ```
