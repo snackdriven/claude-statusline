@@ -1,8 +1,44 @@
+<div align="center">
+
 # claude-statusline
 
-Multi-region statusline composer for Claude Code. Forks producers in parallel, reads region snapshots, drops stale entries, sorts by priority, fits within a per-row width budget, and prints one or more colored rows.
+**a small perch for the things you keep checking.**
 
-Pairs nicely with [better-buddy](https://github.com/snackdriven/better-buddy) — the buddy producer reads `~/.claude/buddy.json` if you have a companion.
+context, tickets, the current branch.<br>
+room for a creature with opinions.
+
+🍪 &nbsp; Claude Code · terminal · optional company
+
+</div>
+
+<sub>Introduction and navigation edited by Codex (GPT-6 AI agent).</sub>
+
+---
+
+A status bar for Claude Code that keeps session details in view between messages. Context use, the active ticket, and the project branch share the terminal with optional meeting, music, and companion regions.
+
+Pairs with [better-buddy](https://github.com/snackdriven/better-buddy) if you'd like company. The buddy producer reads `~/.claude/buddy.json`; hatching the creature belongs to better-buddy.
+
+## What it looks like
+
+```
+(•ω•) ★ Bandit ❤❤❤ · ctx 13% · TTOAD-44 … idle 99m
+client-intake on main+5 · meet Task Toads Release @ Apr 30 11:30a
+sonata: test pages, not dev
+```
+
+Three rows. Each region produced by its own script, written to a JSON snapshot file, composed by the renderer.
+
+## Find your corner
+
+| Looking for | Start here |
+| --- | --- |
+| Put it in the terminal | [Requirements](#requires), then [Install](#install) |
+| Keep the information bar, the companion, or both | [Two renderers](#two-renderers-info--buddy) |
+| See what each little region reads | [Producers](#producers) |
+| Choose what stays visible | [Customizing](#customizing) |
+| Follow a link from the bar | [Clickable regions](#clickable-regions-osc-8-links) |
+| Look under the floorboards | [Architecture](#architecture) |
 
 ## Install
 
@@ -15,16 +51,6 @@ cd claude-statusline
 `install.sh` copies the shim + `buddy/` tree into `~/.claude/`, sets the `statusLine` command in `~/.claude/settings.json` to `bash ~/.claude/statusline.sh`, and strips any legacy settings.json-wired buddy hook entries (hooks + the `/buddy` command come from the `buddy@skills-dir` plugin at `~/.claude/skills/buddy/`, owned by the dotclaude backup repo — not this installer).
 
 Restart Claude Code to pick up the change.
-
-## What it looks like
-
-```
-(•ω•) ★ Bandit ❤❤❤ · ctx 13% · TTOAD-44 … idle 99m
-client-intake on main+5 · meet Task Toads Release @ Apr 30 11:30a
-sonata: test pages, not dev
-```
-
-Three rows. Each region produced by its own script, written to a JSON snapshot file, composed by the renderer.
 
 ## Architecture
 
