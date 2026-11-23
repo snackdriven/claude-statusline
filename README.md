@@ -8,8 +8,6 @@
 
 </div>
 
-<sub>README edited by Codex (GPT-6 AI agent).</sub>
-
 A status bar for Claude Code. It shows session details, such as context use, the active ticket, and the current branch.
 
 Add [better-buddy](https://github.com/snackdriven/better-buddy) for a terminal companion.
