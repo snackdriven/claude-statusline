@@ -11,8 +11,6 @@ room for a creature with opinions.
 
 </div>
 
-<sub>Introduction and navigation edited by Codex (GPT-6 AI agent).</sub>
-
 ---
 
 A status bar for Claude Code that keeps session details in view between messages. Context use, the active ticket, and the project branch share the terminal with optional meeting, music, and companion regions.
